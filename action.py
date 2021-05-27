@@ -13,9 +13,6 @@ class Work:
         self.dif_level = dif_level
 
     def work(self, bohater, type=0, adventure=None):
-        if adventure is None:
-            adventure = Adventure(self.dif_level)
-        # jeśli przygoda nie zostanie użyta w wywołaniu metody to zostaje utworzona nowa z in_action = False
         '''
         Generowanie punktów doświadczenia dla 4 trybów:
             0 generuje might_exp
@@ -23,7 +20,7 @@ class Work:
             2 generuje psyche_exp
             3 generuje lore_exp
         '''
-        if not adventure.in_action:
+        if ((not adventure.in_action) or (adventure is None)):
             if type == 0:
                 self.nameExp = "might_exp"
                 self.namePassive = "Stamina"
@@ -57,11 +54,7 @@ class Act:
         self.reward = Currency(Decimal(random.randrange(2, 10, 1) / 100) * sum(dif_level), 'gold')
 
     def act(self, bohater, adventure=None):
-        if adventure is None:
-            adventure = Adventure(self.dif_level)
-
-        # jeśli przygoda nie zostanie użyta w wywołaniu metody to zostaje utworzona nowa z in_action = False
-        if adventure.in_action:
+        if ((not (adventure is None)) and (adventure.in_action)):
             if bohater.passive[0].val - self.cost < 0:
                 print("Nie posiadasz wystarczająco staminy")
             else:
@@ -78,20 +71,17 @@ class Rest:
         self.stamina = Currency(Decimal(random.randrange(100, 1000, 1) / 500) * sum(dif_level), "Stamina")
 
     def regeneration(self, bohater, adventure=None):
-        if adventure is None:
-            adventure = Adventure(self.dif_level)
-        # jeśli przygoda nie zostanie użyta w wywołaniu metody to zostaje utworzona nowa z in_action = False
-        if not adventure.in_action:
+        if ((not adventure.in_action) or (adventure is None)):
+            start=time.time()
             while bohater.passive[0].val != bohater.passive[0].max:
+                if(time.time()>start+1):
+                    start=time.time()
 
-                time.sleep(1)  # póki co usypia na sekundę
-                # nie ma opcji na tego sleepa tutaj
-
-                if bohater.passive[0].val + self.stamina > bohater.passive[0].max:
-                    bohater.passive[0].val = bohater.passive[0].max
-                else:
-                    bohater.passive[0].val += self.stamina
-                break
+                    if bohater.passive[0].val + self.stamina > bohater.passive[0].max:
+                        bohater.passive[0].val = bohater.passive[0].max
+                    else:
+                        bohater.passive[0].val += self.stamina
+                    break
         else:
             Camp(self.dif_level).regeneration(bohater, adventure)
 
@@ -102,15 +92,14 @@ class Camp:
         self.stamina = Currency(Decimal(random.randrange(100, 500, 1) / 500) * sum(dif_level), "Stamina")
 
     def regeneration(self, bohater, adventure=None):
-        if adventure is None:
-            adventure = Adventure(self.dif_level)
-        # jeśli przygoda nie zostanie użyta w wywołaniu metody to zostaje utworzona nowa z in_action = False
-        if adventure.in_action:
+        if ((not (adventure is None)) and (adventure.in_action)):
+            start = time.time()
             while bohater.passive[0].val != bohater.passive[0].max:
-                time.sleep(1)  # póki co usypia na sekundę
-                if bohater.passive[0].val + self.stamina > bohater.passive[0].max:
-                    bohater.passive[0].val = bohater.passive[0].max
-                else:
-                    bohater.passive[0].val += self.stamina
+                if(time.time()>start+1):
+                    start=time.time()
+                    if bohater.passive[0].val + self.stamina > bohater.passive[0].max:
+                        bohater.passive[0].val = bohater.passive[0].max
+                    else:
+                        bohater.passive[0].val += self.stamina
         else:
             Rest(self.dif_level).regeneration(bohater, adventure)
