@@ -1,5 +1,5 @@
 
-from database import Connection
+from .database import Connection
 
 class AbstractRepository:
     def __init__(self, reset):
@@ -51,7 +51,7 @@ class AbstractRepository:
         """.format(self.name, keys[0], arr[keys[0]])
 
         for i in range(1, len(arr) ):
-            self.querry = (self.querry  + " AND {} = {}" ).format(keys[i], arr[keys[i]])
+            self.querry = (self.querry + " AND `{}` = \"{}\"").format(keys[i], arr[keys[i]])
         
         try:
             #print ("DEBUG:", self.querry)
@@ -80,8 +80,8 @@ class AbstractRepository:
 
         id_arr = { key:value for (key,value) in arr.items() if key.find("id") != -1 and value != None }
 
-        exist = []
-        exist = self._findBy( arr )
+        #exist = self._findBy( arr )
+        exist = self._findBy({new_keys[i]: new_values[i] for i in range(len(new_values))})
 
         if id_arr == {} or exist == []:
             self.querry = "INSERT INTO `{}` (`{}`" + ((", `{}`")*(len(new_keys)-1)) + ")"
@@ -120,14 +120,22 @@ class AbstractRepository:
             print ("failed.")
             print(e)
             return False
-        finally:
-            return True
 
         query = "SELECT last_insert_rowid()"
         self.cursor.execute(query)
         result = self.cursor.fetchall()
 
         return result[0][0]
+
+    def _execute(self, query):
+        self.cursor = Connection().getInstance()
+        try:
+            self.cursor.execute(query)
+        except Exception as e:
+            print(query)
+            print("failed. ->", e)
+            return None
+        return self.cursor.fetchall()
 
 if __name__ == "__main__":
     ar = AbstractRepository()

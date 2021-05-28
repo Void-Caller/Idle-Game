@@ -1,6 +1,7 @@
 # pip install sqlite3
 import sqlite3
 
+
 class ConnectionMeta(type):
     _instances = {}
 
@@ -13,29 +14,30 @@ class ConnectionMeta(type):
 
 class Connection(metaclass=ConnectionMeta):
     cnx = None
+
     def __init__(self):
         self.cnx = sqlite3.connect('database.db',
-            isolation_level=None) # autocommit
-        self.cnx.cursor().execute("PRAGMA foreign_keys = 1") # Włączenie sprawdzania kluczy obcych
-        #cursor().execute('')
-    
+                                   isolation_level=None)  # autocommit
+        self.cnx.cursor().execute("PRAGMA foreign_keys = 1")  # Włączenie sprawdzania kluczy obcych
+        # cursor().execute('')
+
     def getInstance(self):
         return self.cnx.cursor()
-        
+
     def __del__(self):
         self.cnx.close()
-        
+
+
 # Example
 
 def create_db():
     cursor = Connection().getInstance()
-        
+
     querries = [
         """DROP TABLE IF EXISTS `users_currency`;""",
         """DROP TABLE IF EXISTS `users_attribute`;""",
         """DROP TABLE IF EXISTS `users_item`;""",
         """DROP TABLE IF EXISTS `user`;""",
-        
         """
         CREATE TABLE `user` (
             `id`                INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -79,38 +81,38 @@ def create_db():
         );
         """
     ]
-    
+
     i = 0
     for querry in querries:
         try:
             cursor.execute(querry)
         except Exception as e:
-            print (i, "failed.")
+            print(i, "failed.")
             print(querry)
             raise e
-        
-        
-        print (i, "success.")
+
+        print(i, "success.")
         i = i + 1
-    
+
+
 def insert_example_data():
     cursor = Connection().getInstance()
 
     querry = "INSERT INTO `user` (`username`, `password`, `email`) VALUES (?, ?, ?)"
-    values = ("User_123", "$2b$12$ud1WZ0Q/nIh6mkdwwJUgReUXsCMPBR8Wf00gmLmYw4d2EhhyyT75W", "Email_123") # password: aaaa
-    cursor.execute(querry, values)
-    
-    querry = "INSERT INTO `user` (`username`, `password`, `email`) VALUES (?, ?, ?)"
-    values = ("User_124", "$2b$12$ud1WZ0Q/nIh6mkdwwJUgReUXsCMPBR8Wf00gmLmYw4d2EhhyyT75W", "Email_124") # password: aaaa
+    values = ("User_123", "$2b$12$ud1WZ0Q/nIh6mkdwwJUgReUXsCMPBR8Wf00gmLmYw4d2EhhyyT75W", "Email_123")  # password: aaaa
     cursor.execute(querry, values)
 
     querry = "INSERT INTO `user` (`username`, `password`, `email`) VALUES (?, ?, ?)"
-    values = ("User_125", "$2b$12$ud1WZ0Q/nIh6mkdwwJUgReUXsCMPBR8Wf00gmLmYw4d2EhhyyT75W", "Email_125") # password: aaaa
+    values = ("User_124", "$2b$12$ud1WZ0Q/nIh6mkdwwJUgReUXsCMPBR8Wf00gmLmYw4d2EhhyyT75W", "Email_124")  # password: aaaa
+    cursor.execute(querry, values)
+
+    querry = "INSERT INTO `user` (`username`, `password`, `email`) VALUES (?, ?, ?)"
+    values = ("User_125", "$2b$12$ud1WZ0Q/nIh6mkdwwJUgReUXsCMPBR8Wf00gmLmYw4d2EhhyyT75W", "Email_125")  # password: aaaa
     cursor.execute(querry, values)
 
     querry = "INSERT INTO `users_currency` (`user_id`) VALUES (1)"
     cursor.execute(querry)
-    
+
     querry = "INSERT INTO `users_attribute` (`user_id`) VALUES (1)"
     cursor.execute(querry)
 
@@ -138,29 +140,29 @@ def decimal_test():
     print(i, "success.")
 
     from decimal import getcontext, Decimal
-    #x = Decimal('1234567890123456797342394242394372340.1234567890123456901234567890123456890123123')
+    # x = Decimal('1234567890123456797342394242394372340.1234567890123456901234567890123456890123123')
     x = Decimal('1234567890123456797342394242394372340.1234567890123456901234567890123456890123123'
-    '1234567890123456901234567890123456890123123'
-    '1234567890123456901234567890123456890123123'
-    '1234567890123456901234567890123456890123123'
-    '1234567890123456901234567890123456890123123'
-    '1234567890123456901234567890123456890123123'
-    '1234567890123456901234567890123456890123123'
-    '1234567890123456901234567890123456890123123'
-    '1234567890123456901234567890123456890123123'
-    '1234567890123456901234567890123456890123123'
-    '1234567890123456901234567890123456890123123'
-    '1234567890123456901234567890123456890123123'
-    '1234567890123456901234567890123456890123123'
-    '1234567890123456901234567890123456890123123'
-    '1234567890123456901234567890123456890123123'
-    '1234567890123456901234567890123456890123123'
-    '1234567890123456901234567890123456890123123'
+                '1234567890123456901234567890123456890123123'
+                '1234567890123456901234567890123456890123123'
+                '1234567890123456901234567890123456890123123'
+                '1234567890123456901234567890123456890123123'
+                '1234567890123456901234567890123456890123123'
+                '1234567890123456901234567890123456890123123'
+                '1234567890123456901234567890123456890123123'
+                '1234567890123456901234567890123456890123123'
+                '1234567890123456901234567890123456890123123'
+                '1234567890123456901234567890123456890123123'
+                '1234567890123456901234567890123456890123123'
+                '1234567890123456901234567890123456890123123'
+                '1234567890123456901234567890123456890123123'
+                '1234567890123456901234567890123456890123123'
+                '1234567890123456901234567890123456890123123'
+                '1234567890123456901234567890123456890123123'
                 )
 
     querry = "INSERT INTO `decimaltest` (`txt`) VALUES (?)"
     values = (str(x),)
-    cursor.execute(querry,values)
+    cursor.execute(querry, values)
 
     querry = "SELECT * FROM `decimaltest`"
     cursor.execute(querry)
@@ -171,35 +173,27 @@ def decimal_test():
         if x == y:
             print("decimal dziala")
 
+
 if __name__ == "__main__":
 
-    create_db()
-    insert_example_data()
+    #create_db()
+    #insert_example_data()
     cursor = Connection().getInstance()
-    
 
     querry = "SELECT * FROM `user`"
     cursor.execute(querry)
     for row in cursor:
-        print (row)
-        
+        print(row)
+
+    exit()
     querry = "SELECT * FROM `users_currency`"
     cursor.execute(querry)
     for row in cursor:
-        print (row)
+        print(row)
 
     querry = "SELECT * FROM `users_attribute`"
     cursor.execute(querry)
     for row in cursor:
-        print (row)
+        print(row)
 
     decimal_test()
-
-
-
-
-
-
-
-
-

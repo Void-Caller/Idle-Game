@@ -1,4 +1,4 @@
-from AbstractRepository import AbstractRepository
+from .AbstractRepository import AbstractRepository
 
 class UserCurrency:
     def __init__(self):

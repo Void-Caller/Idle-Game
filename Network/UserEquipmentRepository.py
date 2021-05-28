@@ -1,4 +1,4 @@
-from AbstractRepository import AbstractRepository
+from .AbstractRepository import AbstractRepository
 
 class UserEquipment:
     def __init__(self):
@@ -69,6 +69,11 @@ class UserEquipmentRepository(AbstractRepository):
             print(querry)
             print ("failed.")
             print(e)
+
+    def findByUserId(self, name):
+        query = """ SELECT * FROM `{}` WHERE `username` = "qwe" """.format(self.name, name)
+        result = self._execute(query)
+        return result
 
 if __name__ == "__main__":
 

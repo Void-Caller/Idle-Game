@@ -1,4 +1,4 @@
-from AbstractRepository import AbstractRepository
+from .AbstractRepository import AbstractRepository
 
 class Item:
     def __init__(self):

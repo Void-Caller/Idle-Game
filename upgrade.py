@@ -25,7 +25,7 @@ class Upgrade:
         self.current_level = 0
         self.max_level = max_level
         
-        if not (len(upgrade_cost)==1 or len(upgrade_cost)==max_level):
+        if not (len(upgrade_cost)==1 or len(upgrade_cost)==max_level)
             raise Exception("upgrade_cost must contain 1 or max_level elements.")
             
         self.upgrade_cost = upgrade_cost

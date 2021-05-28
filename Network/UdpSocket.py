@@ -1,8 +1,8 @@
 import socket
 
 from decimal import Decimal
-from packet import Packet
-from packetTypes import PacketType
+from .packet import Packet
+from .packetTypes import PacketType
 
 class UdpSocket:
 

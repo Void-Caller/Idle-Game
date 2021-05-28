@@ -1,5 +1,5 @@
 from decimal import getcontext, Decimal
-from packetTypes import PacketType
+from .packetTypes import PacketType
 import struct
 
 class Packet:
