@@ -4,7 +4,6 @@ from decimal import Decimal
 import time
 import random
 
-
 # TODO do poprawy odejmowanie atrybutów pasywnych aktualnie różne typy (Decimal - Currency)
 
 class Work:
