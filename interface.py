@@ -1,6 +1,10 @@
+import time
 import tkinter as tk
 from tkinter import ttk
 from tkinter import font as tkfont
+
+import decimal
+
 from Network.client import Client
 import hero
 import action
@@ -115,24 +119,9 @@ class MenuView(tk.Frame):
 
 
 class GameView(tk.Frame):
-    def __init__(self, parent, controller):
-        """Konstruktor dla GameView.
-        Args:
-            parent: tk.Frame, kontener będący rodzicem strony.
-            controller: Application, instancja klasy bazowej
-        """
-        tk.Frame.__init__(self, parent)
-        self.controller = controller
-        # self.entry_label_font = tkfont.Font(
-        #    family='Helvetica', size=12, weight='bold')
 
-        #  Pomocniczne zmienne
-        self.stamina = float(5)
-        #
-        self.game_font = tkfont.Font(
-            family='Helvetica', size=10, weight="bold")
-
-        some_lb = tk.Label(self, text='Game', font=controller.main_font)
+    def __init_gui__(self):
+        self.game_font = tkfont.Font(family='Helvetica', size=10, weight="bold")
 
         tk.Label(self, text='Riches', bg='#ccfffc').grid(row=0, column=0, sticky="nwse", columnspan=2)
 
@@ -179,34 +168,40 @@ class GameView(tk.Frame):
         self.clarity_value = tk.Label(self, text="0", font=self.game_font, anchor='e')
         self.clarity_value.grid(row=14, column=1, sticky="nwse")
 
-        # self.treasures_value['text'] = large_number_format('99955479574157')
-        # error_lb['text']
-
+        # Atrybuty Pasywne
         tk.Label(self, text='Stamina', bg='#ccfffc').grid(row=0, column=5, sticky="nwse", columnspan=2)
         self.stamina_prbar = ttk.Progressbar(self, orient=tk.HORIZONTAL, length=100, mode='determinate')  # variable=?
         self.stamina_prbar.grid(row=1, column=5, sticky="ew")
-
         tk.Label(self, text='Health', bg='#ccfffc').grid(row=2, column=5, sticky="nwse", columnspan=2)
         self.health_prbar = ttk.Progressbar(self, orient=tk.HORIZONTAL, length=100, mode='determinate')  # variable=?
         self.health_prbar.grid(row=3, column=5, sticky="ew")
-
         tk.Label(self, text='Ploy', bg='#ccfffc').grid(row=4, column=5, sticky="nwse", columnspan=2)
         self.ploy_prbar = ttk.Progressbar(self, orient=tk.HORIZONTAL, length=100, mode='determinate')  # variable=?
         self.ploy_prbar.grid(row=5, column=5, sticky="ew")
-
         tk.Label(self, text='Spirit', bg='#ccfffc').grid(row=6, column=5, sticky="nwse", columnspan=2)
         self.spirit_prbar = ttk.Progressbar(self, orient=tk.HORIZONTAL, length=100, mode='determinate')  # variable=?
         self.spirit_prbar.grid(row=7, column=5, sticky="ew")
-
         tk.Label(self, text='Clarity', bg='#ccfffc').grid(row=8, column=5, sticky="nwse", columnspan=2)
         self.clarity_prbar = ttk.Progressbar(self, orient=tk.HORIZONTAL, length=100, mode='determinate')  # variable=?
         self.clarity_prbar.grid(row=9, column=5, sticky="ew")
 
-        activity_names = ["Work", "Rest", "Adventure", "Challenge"]
+        # Buttons
+        self.work_btn = tk.Button(self, text="Work", command=lambda: self.button_click("Work"))
+        self.rest_btn = tk.Button(self, text="Rest", command=lambda: self.button_click("Rest"))
+        self.adventure_btn = tk.Button(self, text="Adventure", command=lambda: self.button_click("Adventure"))
+        self.challenge_btn = tk.Button(self, text="Challenge", command=lambda: self.button_click("Challenge"))
+
         self.activity_btns = []
-        for i in range(len(activity_names)):
-            b = tk.Button(self, text=activity_names[i])
-            self.activity_btns.append(b)
+        self.activity_btns.append(self.work_btn)
+        self.activity_btns.append(self.rest_btn)
+        self.activity_btns.append(self.adventure_btn)
+        self.activity_btns.append(self.challenge_btn)
+
+        # Status
+        self.status_label = tk.Label(self, text="Idle",
+                                     font=tkfont.Font(family='Helvetica', size=24, weight="bold"),
+                                     anchor='center')
+        self.status_label.grid(row=14, column=2, sticky="nwse", columnspan=3)
 
         cols = 3
         rows = len(self.activity_btns) // cols + (len(self.activity_btns) % cols > 0)
@@ -222,8 +217,38 @@ class GameView(tk.Frame):
             self.rowconfigure(x, weight=1)
         for y in range(10):
             self.columnconfigure(y, weight=1)
+
+    def __init__(self, parent, controller):
+        """Konstruktor dla GameView.
+        Args:
+            parent: tk.Frame, kontener będący rodzicem strony.
+            controller: Application, instancja klasy bazowej
+        """
+        tk.Frame.__init__(self, parent)
+        self.controller = controller
+        self.elapsed = time.time()
+        self.resting = False
+        self.dif_level = [1, 1, 1, 1]
+        self.adventure = None
+
+        self.__init_gui__()
+
         self.start()
         self.refresh()
+
+    def button_click(self, name):
+        if name == "Work":
+            if not self.resting:
+                work = action.Work(self.dif_level)
+                for i in range(4):
+                    work.work(self.controller.hero, i)
+        if name == "Rest":
+            self.resting = not self.resting
+            if (self.resting):
+                self.status_label['text'] = 'Resting'
+            else:
+                self.status_label['text'] = 'Idle'
+
 
     def start(self):
         self.stamina_prbar['maximum'] = self.controller.hero.stamina.max
@@ -232,25 +257,38 @@ class GameView(tk.Frame):
         self.spirit_prbar['maximum'] = self.controller.hero.spirit.max
         self.clarity_prbar['maximum'] = self.controller.hero.clarity.max
 
-
     def refresh(self):
         """Uaktualnij dane na stronie"""
         self.after(33, self.refresh)  # 30 fpsow
-        # rest = action.Rest([1, 1, 1, 1])
-        # rest.regeneration(self.controller.hero)
+
+        d_time = time.time() - self.elapsed
+        self.elapsed = time.time()
+
+        if self.resting:
+            rest = action.Rest(self.dif_level)
+            rest.regeneration(self.controller.hero, d_time)
 
         # update text
-        self.stamina_value['text'] = str(self.controller.hero.stamina.val)
-        self.health_value['text'] = str(self.controller.hero.health.val)
-        self.ploy_value['text'] = str(self.controller.hero.ploy.val)
-        self.spirit_value['text'] = str(self.controller.hero.spirit.val)
-        self.clarity_value['text'] = str(self.controller.hero.clarity.val)
+        self.gold_value['text'] = large_number_format(self.controller.hero.riches.val)
+        self.treasures_value['text'] = large_number_format(self.controller.hero.treasures.val)
+
+        self.might_value['text'] = large_number_format(self.controller.hero.might.val)
+        self.cunning_value['text'] = large_number_format(self.controller.hero.might.val)
+        self.psyche_value['text'] = large_number_format(self.controller.hero.might.val)
+        self.lore_value['text'] = large_number_format(self.controller.hero.might.val)
+
+        self.stamina_value['text'] = large_number_format(self.controller.hero.stamina.val)
+        self.health_value['text'] = large_number_format(self.controller.hero.health.val)
+        self.ploy_value['text'] = large_number_format(self.controller.hero.ploy.val)
+        self.spirit_value['text'] = large_number_format(self.controller.hero.spirit.val)
+        self.clarity_value['text'] = large_number_format(self.controller.hero.clarity.val)
+
         # update progress bar
-        self.stamina_prbar['value'] = float(self.controller.hero.stamina.val)
-        self.health_prbar['value'] = float(self.controller.hero.health.val)
-        self.ploy_prbar['value'] = float(self.controller.hero.ploy.val)
-        self.spirit_prbar['value'] = float(self.controller.hero.spirit.val)
-        self.clarity_prbar['value'] = float(self.controller.hero.clarity.val)
+        self.stamina_prbar['value'] = self.controller.hero.stamina.val
+        self.health_prbar['value'] = self.controller.hero.health.val
+        self.ploy_prbar['value'] = self.controller.hero.ploy.val
+        self.spirit_prbar['value'] = self.controller.hero.spirit.val
+        self.clarity_prbar['value'] = self.controller.hero.clarity.val
 
     def reset(self):
         """Zresetuj stronę do stanu początkowego"""
@@ -441,18 +479,25 @@ def large_number_format(number):
     def _round(num, div, let=''):
         return str(round(num / div, 2)) + let
 
-    number = int(str(number))  # z decimal do string do int
+    if number.__class__.__name__ == "Currency":
+        number = str(number.val)
+
+    try:
+        number = decimal.Decimal(number)  # z decimal do string do int
+    except ValueError as e:
+        print(e)
+        print(number.__class__.__name__)
 
     letters = ['K', 'M', 'B', 'T', 'Qa', 'Qi', 'Sx', 'Sp', 'Oct', 'Non', 'Dec', 'Und', 'Duo']
     i = len(letters) - 1
-    f = 999_999_999_999_999_999_999_999_999_999_999_999_999
-    div = 1_000_000_000_000_000_000_000_000_000_000_000_000_000
+    f = decimal.Decimal(999_999_999_999_999_999_999_999_999_999_999_999_999)
+    div = decimal.Decimal(1_000_000_000_000_000_000_000_000_000_000_000_000_000)
     while i >= 0:
         if number > f:
             return _round(number, div, letters[i])
-        f, div, i = f // 1000, div // 1000, i - 1
+        f, div, i = f / 1000, div / 1000, i - 1
 
-    return number
+    return str(round(number, 2))
 
 
 def main():
