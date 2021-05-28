@@ -2,6 +2,7 @@ import time
 import tkinter as tk
 from tkinter import ttk
 from tkinter import font as tkfont
+from threading import Thread, Event
 
 import decimal
 
@@ -228,27 +229,43 @@ class GameView(tk.Frame):
         self.controller = controller
         self.elapsed = time.time()
         self.resting = False
+        self.working = False
         self.dif_level = [1, 1, 1, 1]
         self.adventure = None
+        self.work = action.Work(self.dif_level, True)
 
         self.__init_gui__()
 
         self.start()
         self.refresh()
 
-    def button_click(self, name):
-        if name == "Work":
-            if not self.resting:
-                work = action.Work(self.dif_level)
-                for i in range(4):
-                    work.work(self.controller.hero, i)
-        if name == "Rest":
-            self.resting = not self.resting
-            if (self.resting):
-                self.status_label['text'] = 'Resting'
-            else:
-                self.status_label['text'] = 'Idle'
+    def work_timeout(self, work):
+        time.sleep(work.work_time)
+        work.finish()
 
+        self.status_label['text'] = 'Idle'
+        self.working = False
+
+    def button_click(self, name):
+
+        if name == "Work":
+            if not self.resting and not self.working:
+                work = action.Work(self.dif_level)
+                work.work(self.controller.hero, 0)
+
+                work_thread = Thread(target=self.work_timeout, args=(work,))
+                work_thread.start()
+
+                self.working = True
+                self.status_label['text'] = 'Working'
+
+        elif name == "Rest":
+            self.resting = not self.resting
+            if not self.working:
+                if self.resting:
+                    self.status_label['text'] = 'Resting'
+                else:
+                    self.status_label['text'] = 'Idle'
 
     def start(self):
         self.stamina_prbar['maximum'] = self.controller.hero.stamina.max

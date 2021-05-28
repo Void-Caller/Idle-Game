@@ -8,8 +8,9 @@ import random
 
 class Work:
     # czynność trwająca ileś sekund; zużywa atrybuty pasywne
-    def __init__(self, dif_level):
+    def __init__(self, dif_level, ended=False):
         self.dif_level = dif_level
+        self.elapsed = 0.0
 
     def work(self, bohater, type=0, adventure=None):
         """
@@ -20,7 +21,6 @@ class Work:
             3 generuje lore_exp
         """
         if (adventure is None) or (not adventure.in_action):
-            ## co to jest `might_exp` ???
             if type == 0:
                 self.nameExp = "might_exp"
                 self.namePassive = "Stamina"
@@ -39,10 +39,17 @@ class Work:
                 print("Nie posiadasz wystarczająco staminy")
             else:
                 # time.sleep(random.randrange(1, 10, 1))  # nie moze byc tych sleepow
-                bohater.passive[0].val -= self.cost.val
-                bohater.riches += Currency(self.reward.val, 'gold')
+                self.bohater = bohater
+                # od 0.25 do 2 sekund
+                self.work_time = random.random() * 1.75 + 0.25
+                print(self.work_time)
         else:
             print("Aby skorzystać zakończ misje...")
+        return 0
+
+    def finish(self):
+        self.bohater.passive[0].val -= self.cost.val
+        self.bohater.riches += Currency(self.reward.val, 'gold')
 
 
 class Act:
