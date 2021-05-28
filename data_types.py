@@ -152,7 +152,7 @@ class Currency():
         self.type = type
 
     def __str__(self):
-        return str(self.type) + " " + str(self.val)
+        return str(self.val)
 
     def __mul__(self, other):
         if isinstance(other, Currency):
@@ -297,7 +297,7 @@ class PassiveAttribute(Currency):
     Jego maksymalny poziom, max trzeba zmieniać poprzez odwołania do atrybutu.
 
     '''
-    def __init__(self, val=0, max=100, type='Spirit'):
+    def __init__(self, val=0, maximum_val=100, type='Spirit'):
         self.type = type
         self.val = Decimal(val)
         self.max = Decimal(100)
