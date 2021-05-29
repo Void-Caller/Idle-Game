@@ -28,6 +28,7 @@ class Client(metaclass=ClientMeta):
 
     def send(self, packet):
         self.socket.send(packet, server_ip, server_port)
+
     def __listen(self, required_packet_type) -> Packet:
 
         server_info = (0, 0)
@@ -58,6 +59,7 @@ class Client(metaclass=ClientMeta):
         while (True):
             if self.__test_packets() == 0:
                 break
+
     def __test_packets(self):
         for i in range(1, len(PacketType) + 1):
             print("[", i, "] : ", PacketType(i), sep='')
@@ -143,6 +145,7 @@ class Client(metaclass=ClientMeta):
 
         packet = self.__listen(PacketType.LOGIN)
         return packet.get()
+
     def logout(self):
         """
             Logout from server
@@ -154,15 +157,12 @@ class Client(metaclass=ClientMeta):
                     '1' - success
         """
 
-        if username.__class__.__name__ != 'str' \
-                or password.__class__.__name__ != 'str':
-            raise TypeError("username, password must be 'str'")
-
         packet = Packet(PacketType.LOGOUT)
         self.send(packet)
 
         packet = self.__listen(PacketType.LOGOUT)
         return packet.get()
+
     def get_stats(self):
         """
             Get User Stats
@@ -339,17 +339,17 @@ class Client(metaclass=ClientMeta):
 
         packet = self.__listen(PacketType.GET_STATS)
         return {
-            'gold' : packet.get(),
-            'treasure' : packet.get(),
-            'might' : packet.get(),
-            'cunning' : packet.get(),
-            'psyche' : packet.get(),
-            'lore' : packet.get(),
-            'stamina' : packet.get(),
-            'health' : packet.get(),
-            'ploy' : packet.get(),
-            'spirit' : packet.get(),
-            'clarity' : packet.get()
+            'gold': packet.get(),
+            'treasure': packet.get(),
+            'might': packet.get(),
+            'cunning': packet.get(),
+            'psyche': packet.get(),
+            'lore': packet.get(),
+            'stamina': packet.get(),
+            'health': packet.get(),
+            'ploy': packet.get(),
+            'spirit': packet.get(),
+            'clarity': packet.get()
         }
 
     def get_items(self):
@@ -372,13 +372,13 @@ class Client(metaclass=ClientMeta):
         packet = self.__listen(PacketType.GET_ITEMS)
         items = []
         n = packet.get()
-        print("N:",n)
+        print("N:", n)
 
         for i in range(n):
             item_id = packet.get()
             equipped = packet.get()
-            items.append( (item_id, equipped) )
-        
+            items.append((item_id, equipped))
+
         return items
 
     def get_item_info(self, item_id):
@@ -406,18 +406,18 @@ class Client(metaclass=ClientMeta):
         packet = self.__listen(PacketType.GET_ITEM_INFO)
 
         return {
-            'name' : packet.get(),
-            'type' : packet.get(),
-            'req_might' : packet.get(),
-            'req_cunning' : packet.get(),
-            'req_psyche' : packet.get(),
-            'req_lore' : packet.get(),
-            'might' : packet.get(),
-            'cunning' : packet.get(),
-            'psyche' : packet.get(),
-            'lore' : packet.get()
+            'name': packet.get(),
+            'type': packet.get(),
+            'req_might': packet.get(),
+            'req_cunning': packet.get(),
+            'req_psyche': packet.get(),
+            'req_lore': packet.get(),
+            'might': packet.get(),
+            'cunning': packet.get(),
+            'psyche': packet.get(),
+            'lore': packet.get()
         }
-        
+
         return items
 
     def save_stats(self, stats):
@@ -473,7 +473,7 @@ class Client(metaclass=ClientMeta):
         """
         packet = Packet(PacketType.SAVE_ITEMS)
 
-        packet.add( len(items) )
+        packet.add(len(items))
 
         for item in items:
             packet.add(item['item_id'])
@@ -482,7 +482,8 @@ class Client(metaclass=ClientMeta):
         self.send(packet)
 
         packet = self.__listen(PacketType.SAVE_ITEMS)
-        return packet.get()  
+        return packet.get()
+
 
 if __name__ == "__main__":
     import random

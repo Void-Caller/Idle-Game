@@ -6,6 +6,7 @@ from threading import Thread, Event
 
 import decimal
 
+import data_types
 from Network.client import Client
 import hero
 import action
@@ -39,7 +40,7 @@ class Application(tk.Tk):
 
     def create_frames(self):
         """zainicjalizuj wszystkie strony i umieść je jedna na drugiej"""
-        for F in (MenuView, GameView, GameEndView, LoginView, RegisterView):
+        for F in (MenuView, GameView, GameEndView, LoginView, RegisterView, EquipmentView):
             page_name = F.__name__
             frame = F(parent=self.container, controller=self)
             self.frames[page_name] = frame
@@ -232,6 +233,31 @@ class GameView(tk.Frame):
         self.challenge_btn = tk.Button(self, text="Challenge", command=lambda: self.button_click(
             "Challenge")).grid(row=1, column=2, sticky="nwse", padx=2, pady=2)
 
+        self.equipment_btn = tk.Button(self, text="Equipment", command=lambda: self.controller.show_frame("EquipmentView"))\
+            .grid(row=3, column=2, sticky="nwse", padx=2, pady=2)
+        # Upgrade Buttons
+        self.might_upgrade_btn = tk.Button(self, text="Train", command=lambda: self.train("Might"))\
+            .grid(row=4, column=2, sticky="nwse", padx=2, pady=2)
+        self.cunning_upgrade_btn = tk.Button(self, text="Train", command=lambda: self.train("Cunning"))\
+            .grid(row=5, column=2, sticky="nwse", padx=2, pady=2)
+        self.psyche_upgrade_btn = tk.Button(self, text="Train", command=lambda: self.train("Psyche"))\
+            .grid(row=6, column=2, sticky="nwse", padx=2, pady=2)
+        self.lore_upgrade_btn = tk.Button(self, text="Train", command=lambda: self.train("Lore"))\
+            .grid(row=7, column=2, sticky="nwse", padx=2, pady=2)
+
+        # Koszt Ulepszenia
+        self.might_upgrade_cost = tk.Label(self, text='1.00')
+        self.might_upgrade_cost.grid(row=4, column=3, sticky="w")
+        self.cunning_upgrade_cost = tk.Label(self, text='1.00')
+        self.cunning_upgrade_cost.grid(row=5, column=3, sticky="w")
+        self.psyche_upgrade_cost = tk.Label(self, text='1.00')
+        self.psyche_upgrade_cost.grid(row=6, column=3, sticky="w")
+        self.lore_upgrade_cost = tk.Label(self, text='1.00')
+        self.lore_upgrade_cost.grid(row=7, column=3, sticky="w")
+
+        self.exit_btn = tk.Button(self, text="Logout", command=lambda: logout(self, self.controller)) \
+            .grid(row=14, column=5, sticky="nwse", columnspan=3, padx=2, pady=2)
+
         # Status
         self.status_label = tk.Label(self, text="Idle",
                                      font=tkfont.Font(
@@ -257,14 +283,30 @@ class GameView(tk.Frame):
         self.elapsed = time.time()
         self.resting = False
         self.working = False
+        self.in_adventure = False
         self.dif_level = [1, 1, 1, 1]
         self.adventure = None
-        self.work = action.Work(self.dif_level, True)
 
         self.__init_gui__()
 
         self.start()
         self.refresh()
+
+    def train(self, attribute_name):
+        bohater = self.controller.hero
+        cost = decimal.Decimal(2) ** (bohater.get_attribute(attribute_name).val - 1)
+        if cost < bohater.riches:
+            bohater.train(attribute_name)
+            bohater.riches -= data_types.Currency(cost, 'gold')
+
+            self.might_upgrade_cost.config(text=large_number_format(
+                decimal.Decimal(2) ** (bohater.might_base.val - 1)))
+            self.cunning_upgrade_cost.config(text=large_number_format(
+                decimal.Decimal(2) ** (bohater.cunning_base.val - 1)))
+            self.lore_upgrade_cost.config(text=large_number_format(
+                decimal.Decimal(2) ** (bohater.psyche_base.val - 1)))
+            self.psyche_upgrade_cost.config(text=large_number_format(
+                decimal.Decimal(2) ** (bohater.lore_base.val - 1)))
 
     def work_timeout(self, work):
         time.sleep(work.work_time)
@@ -277,8 +319,15 @@ class GameView(tk.Frame):
 
         if name == "Work":
             if not self.resting and not self.working:
-                work = action.Work(self.dif_level)
-                work.work(self.controller.hero, 0)
+                work = None
+
+                if self.in_adventure:
+                    work = action.Act(self.dif_level)
+                else:
+                    work = action.Work(self.dif_level)
+
+                if not work.act(self.controller.hero):
+                    return
 
                 work_thread = Thread(target=self.work_timeout, args=(work,))
                 work_thread.start()
@@ -321,11 +370,11 @@ class GameView(tk.Frame):
         self.might_value['text'] = large_number_format(
             self.controller.hero.might.val)
         self.cunning_value['text'] = large_number_format(
-            self.controller.hero.might.val)
+            self.controller.hero.cunning.val)
         self.psyche_value['text'] = large_number_format(
-            self.controller.hero.might.val)
+            self.controller.hero.psyche.val)
         self.lore_value['text'] = large_number_format(
-            self.controller.hero.might.val)
+            self.controller.hero.lore.val)
 
         self.stamina_value['text'] = large_number_format(
             self.controller.hero.stamina.val)
@@ -500,6 +549,26 @@ class RegisterView(tk.Frame):
         pass
 
 
+class EquipmentView(tk.Frame):
+    def __init__(self, parent, controller):
+        """Konstruktor dla LoginView.
+        Tworzy przyciski i etykiety, rozmieszcza elementy na stronie.
+        Args:
+            parent: tk.Frame, kontener będący rodzicem strony.
+            controller: Application, instancja klasy bazowej
+        """
+        tk.Frame.__init__(self, parent)
+        self.controller = controller
+
+        back_btn = tk.Button(self, text="Back", font=controller.main_font,
+                             command=lambda: controller.show_frame("GameView")).grid(row=9, column=4)
+
+        for x in range(10):
+            self.rowconfigure(x, weight=1)
+        for y in range(5):
+            self.columnconfigure(y, weight=1)
+
+
 def login(view, controller, username, password):
     cl = Client().get_instance()
     return_value = cl.login(username, password)
@@ -529,6 +598,12 @@ def register(view, controller, username, password, email):
         error_lb['text'] = 'Email already exists.'
 
     error_lb.grid(row=9, column=2, sticky='ew')
+
+
+def logout(view, controller):
+    cl = Client().get_instance()
+    # TODO save variables to db
+    cl.logout()
 
 
 def switch_to_game(view, controller):

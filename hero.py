@@ -18,6 +18,12 @@ class Hero:
         self.cunning = Currency(1, 'Cunning')
         self.psyche = Currency(1, 'Psyche')
         self.lore = Currency(1, 'Lore')
+        # atrybuty czynne bez dodatku itemow / do ustalenia kosztu treningu
+        self.might_base = Currency(1, 'Might')
+        self.cunning_base = Currency(1, 'Cunning')
+        self.psyche_base = Currency(1, 'Psyche')
+        self.lore_base = Currency(1, 'Lore')
+
         self.active = [self.might, self.cunning, self.psyche, self.lore]
         # atrybuty pasywne
         self.stamina = PassiveAttribute(20, 'Stamina')
@@ -53,6 +59,31 @@ class Hero:
                 self.lore += i.item_lore
 
     # Wyposazenie bohatera w przedmiot z naszego ekwipunku
+    def train(self, attribute_name):
+        attr = Currency(1, attribute_name)
+        if attribute_name == "Might":
+            self.might += attr
+            self.might_base += attr
+        elif attribute_name == "Cunning":
+            self.cunning += attr
+            self.cunning_base += attr
+        elif attribute_name == "Psyche":
+            self.psyche += attr
+            self.psyche_base += attr
+        elif attribute_name == "Lore":
+            self.lore += attr
+            self.lore_base += attr
+
+    def get_attribute(self, attribute_name):
+        if attribute_name == "Might":
+            return self.might_base
+        elif attribute_name == "Cunning":
+            return self.cunning_base
+        elif attribute_name == "Psyche":
+            return self.psyche_base
+        elif attribute_name == "Lore":
+            return self.lore_base
+
     def setActiveItem(self, it):
         if it in self.eq.all_items:
             for i in range(len(it.min_attr)):
@@ -63,12 +94,12 @@ class Hero:
                 self.weapon = it
                 self.set[0] = it
             else:
-                #usuwamy bonusy poprzedniego przedmiotu
+                # usuwamy bonusy poprzedniego przedmiotu
                 self.might -= self.set[0].item_might
                 self.cunning -= self.set[0].item_cunning
                 self.psyche -= self.set[0].item_psyche
                 self.lore -= self.set[0].item_lore
-                #dopiero zamieniamy na nowy
+                # dopiero zamieniamy na nowy
                 self.weapon = it
                 self.set[0] = it
         elif it.type == 'Helmet':
@@ -76,12 +107,12 @@ class Hero:
                 self.helmet = it
                 self.set[1] = it
             else:
-                #usuwamy bonusy poprzedniego przedmiotu
+                # usuwamy bonusy poprzedniego przedmiotu
                 self.might -= self.set[1].item_might
                 self.cunning -= self.set[1].item_cunning
                 self.psyche -= self.set[1].item_psyche
                 self.lore -= self.set[1].item_lore
-                #dopiero zamieniamy na nowy
+                # dopiero zamieniamy na nowy
                 self.helmet = it
                 self.set[1] = it
         elif it.type == 'Armor':
@@ -89,12 +120,12 @@ class Hero:
                 self.armor = it
                 self.set[2] = it
             else:
-                #usuwamy bonusy poprzedniego przedmiotu
+                # usuwamy bonusy poprzedniego przedmiotu
                 self.might -= self.set[2].item_might
                 self.cunning -= self.set[2].item_cunning
                 self.psyche -= self.set[2].item_psyche
                 self.lore -= self.set[2].item_lore
-                #dopiero zamieniamy na nowy
+                # dopiero zamieniamy na nowy
                 self.armor = it
                 self.set[2] = it
         elif it.type == 'Ring':
@@ -102,12 +133,12 @@ class Hero:
                 self.ring = it
                 self.set[3] = it
             else:
-                #usuwamy bonusy poprzedniego przedmiotu
+                # usuwamy bonusy poprzedniego przedmiotu
                 self.might -= self.set[3].item_might
                 self.cunning -= self.set[3].item_cunning
                 self.psyche -= self.set[3].item_psyche
                 self.lore -= self.set[3].item_lore
-                #dopiero zamieniamy na nowy
+                # dopiero zamieniamy na nowy
                 self.ring = it
                 self.set[3] = it
         else:
@@ -138,10 +169,10 @@ class Item:
         for i in range(len(minimum)):
             self.min_attr.append(Decimal(minimum[i]))
 
-        self.item_might = Currency(m,"Might")
-        self.item_cunning = Currency(c,"Cunning")
-        self.item_psyche = Currency(p,"Psyche")
-        self.item_lore = Currency(l,'Lore')
+        self.item_might = Currency(m, "Might")
+        self.item_cunning = Currency(c, "Cunning")
+        self.item_psyche = Currency(p, "Psyche")
+        self.item_lore = Currency(l, 'Lore')
         self.item_attr = [self.item_might, self.item_cunning, self.item_psyche, self.item_lore]
 
     # Ustawienie minimalnych atrybutow potrzebnych do zalozenia przedmiotu

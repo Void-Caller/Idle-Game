@@ -4,15 +4,16 @@ from decimal import Decimal
 import time
 import random
 
+
 # TODO do poprawy odejmowanie atrybutów pasywnych aktualnie różne typy (Decimal - Currency)
 
 class Work:
     # czynność trwająca ileś sekund; zużywa atrybuty pasywne
-    def __init__(self, dif_level, ended=False):
+    def __init__(self, dif_level):
         self.dif_level = dif_level
         self.elapsed = 0.0
 
-    def work(self, bohater, type=0, adventure=None):
+    def act(self, bohater, type=0, adventure=None):
         """
         Generowanie punktów doświadczenia dla 4 trybów:
             0 generuje might_exp
@@ -33,23 +34,23 @@ class Work:
             elif type == 3:
                 self.nameExp = "lore_exp"
                 self.namePassive = "Spirit"
-            self.cost = Currency(Decimal(random.randrange(1, 5, 1) / 500) * sum(self.dif_level), self.namePassive)
-            self.reward = Currency(Decimal(random.randrange(5, 50, 1) / 500) * sum(self.dif_level), self.nameExp)
+
+            self.work_time = random.random() * 0.25 + 0.25  # od 0.25 do 0.5 sekund /
+            self.cost = (Decimal(random.randrange(5, 10, 1) / 100) * sum(self.dif_level))
+            self.reward = (Decimal(random.randrange(5, 50, 1) / 100) * sum(self.dif_level))
+
             if bohater.passive[type].val - self.cost < 0:
                 print("Nie posiadasz wystarczająco staminy")
             else:
-                # time.sleep(random.randrange(1, 10, 1))  # nie moze byc tych sleepow
                 self.bohater = bohater
-                # od 0.25 do 2 sekund
-                self.work_time = random.random() * 1.75 + 0.25
-                print(self.work_time)
+                return True
         else:
             print("Aby skorzystać zakończ misje...")
-        return 0
+        return False
 
     def finish(self):
-        self.bohater.passive[0].val -= self.cost.val
-        self.bohater.riches += Currency(self.reward.val, 'gold')
+        self.bohater.passive[0].val -= self.cost * Decimal(self.work_time)
+        self.bohater.riches += Currency(self.reward * Decimal(self.work_time), 'gold')
 
 
 class Act:
@@ -57,7 +58,8 @@ class Act:
     def __init__(self, dif_level):
         self.dif_level = dif_level
         # generuje Riches w zamian za Stamina
-        self.cost = Currency(Decimal(random.randrange(1, 5, 1) / 500) * sum(dif_level), "Stamina")
+
+        self.cost = Currency(Decimal(random.randrange(10, 15, 1) / 100) * sum(dif_level), "Stamina")
         self.reward = Currency(Decimal(random.randrange(2, 10, 1) / 100) * sum(dif_level), 'gold')
 
     def act(self, bohater, adventure=None):
@@ -65,10 +67,14 @@ class Act:
             if bohater.passive[0].val - self.cost < 0:
                 print("Nie posiadasz wystarczająco staminy")
             else:
-                bohater.passive[0].val -= self.cost
-                bohater.riches += self.reward
+                self.act_time = random.random() * 0.25 + 0.25  # od 0.25 do 0.5 sekund /
+                self.bohater = bohater
         else:
             print("Aby skorzystać rozpocznij misje...")
+
+    def finish(self):
+        self.bohater.passive[0].val -= self.cost * Decimal(self.act_time)
+        self.bohater.riches += Currency(self.reward * Decimal(self.act_time), 'gold')
 
 
 class Rest:
@@ -86,7 +92,6 @@ class Rest:
                 bohater.passive[0].val += self.stamina * Decimal(time)
         else:
             Camp(self.dif_level).regeneration(bohater, time, adventure)
-
 
 
 class Camp:
