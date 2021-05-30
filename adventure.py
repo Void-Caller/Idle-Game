@@ -104,10 +104,11 @@ class Challenge:  # wyzwanie
         self.name = random.choice(challenge_names)
         self.difficulty = [Decimal(random.randrange(50, 150, 1) / 10) * dif_level[i] for i in range(4)]
         self.reward = Reward(self.difficulty, 'Challenge')
-        #testowane 4 atrybuty aktywne
-        self.cost = [Decimal(random.randrange(50, 100, 1) / 500) * self.difficulty[i] for i in range(4)]
-        #piaty atrybut nieodpowiadajacy testowanym atrybutom todo balans
-        self.cost.append(Decimal(random.randrange(50, 100, 1) / 1800 * sum(dif_level)))
+        # piaty atrybut nieodpowiadajacy testowanym atrybutom todo balans
+        self.cost = [Decimal(random.randrange(50, 100, 1) / 1800 * sum(dif_level))]
+        # testowane 4 atrybuty aktywne
+        for i in range(4):
+            self.cost.append(Decimal(random.randrange(50, 100, 1) / 500) * self.difficulty[i])
 
     '''return true if completed challenge, false if not'''
     def onClock(self, bohater):
