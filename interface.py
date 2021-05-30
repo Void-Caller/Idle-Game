@@ -405,9 +405,9 @@ class GameView(tk.Frame):
                 work = None
 
                 if self.in_adventure:
-                    work = action.Act(bohater.level)
+                    work = action.Act(bohater.active)
                 else:
-                    work = action.Work(bohater.level)
+                    work = action.Work(bohater.active)
 
                 if not work.act(self.controller.hero):
                     return
@@ -463,7 +463,7 @@ class GameView(tk.Frame):
             self.challenge_progressbar['value'] = self.active_challenge.elapsed
 
         if self.resting:
-            rest = action.Rest(self.dif_level)
+            rest = action.Rest(self.controller.hero.active)
             rest.regeneration(self.controller.hero, d_time)
 
         # update text
@@ -502,44 +502,6 @@ class GameView(tk.Frame):
     def reset(self):
         """Zresetuj stronę do stanu początkowego"""
         pass
-
-    def set_challenges(self, clr=False):
-        if clr:
-            for i in range(3):
-                self.challenges_btns[i].grid_remove()
-                self.adventures_btns[i].grid_remove()
-            self.adventure_label.grid_remove()
-            self.challenge_label.grid_remove()
-            self.challenge_progressbar.grid()
-            return
-        else:
-            for i in range(3):
-                self.challenges_btns[i].grid()
-                self.adventures_btns[i].grid()
-            self.adventure_label.grid()
-            self.challenge_label.grid()
-            self.challenge_progressbar.grid_remove()
-
-        hero_lv = self.controller.hero.level
-
-        self.challenges = []
-        for i in range(3):
-            self.challenges.append(adventure.Challenge(hero_lv + random.randint(0, 1)))
-            string = self.challenges[i].name + "\n"
-            for j in range(4):
-                string = string + large_number_format(self.challenges[i].cost[j]) + ", "
-            self.challenges_btns[i]['text'] = string
-
-        self.adventures = []
-        for i in range(3):
-            self.adventures.append(adventure.Adventure(hero_lv + random.randint(0, 1)))
-            string = self.adventures[i].name + "\n"
-            for j in range(4):
-                sum_stat = decimal.Decimal(0)
-                for challenge in self.adventures[i].challenges:
-                    sum_stat += self.challenges[i].difficulty[j]
-                string = string + large_number_format(sum_stat) + " "
-            self.adventures_btns[i]['text'] = string
 
 
 class GameEndView(tk.Frame):
