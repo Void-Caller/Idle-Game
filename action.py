@@ -7,12 +7,23 @@ import random
 
 # TODO do poprawy odejmowanie atrybutów pasywnych aktualnie różne typy (Decimal - Currency)
 
+def RestException(Exception):
+    pass
+
 class Work:
     # czynność trwająca ileś sekund; zużywa atrybuty pasywne
-    def __init__(self, dif_level):
-        self.dif_level = dif_level
-        self.elapsed = 0.0
+    def __init__(self, level):
+        self.level = level #Decimal lub int
+        self.work_time = random.randint(4,6)
 
+    def onClock(self, bohater):
+        #ulepszenia statow bohatera
+        self.work_time -= 1
+        if self.work_time == 0:
+            return True
+        return False
+
+    #todo lub usunac
     def act(self, bohater, type=0, adventure=None):
         """
         Generowanie punktów doświadczenia dla 4 trybów:
@@ -35,7 +46,6 @@ class Work:
                 self.nameExp = "lore_exp"
                 self.namePassive = "Spirit"
 
-            self.work_time = random.random() * 0.25 + 0.25  # od 0.25 do 0.5 sekund /
             self.cost = (Decimal(random.randrange(5, 10, 1) / 100) * sum(self.dif_level))
             self.reward = (Decimal(random.randrange(5, 50, 1) / 100) * sum(self.dif_level))
 
@@ -48,6 +58,7 @@ class Work:
             print("Aby skorzystać zakończ misje...")
         return False
 
+    #todo lub usunac
     def finish(self):
         self.bohater.passive[0].val -= self.cost * Decimal(self.work_time)
         self.bohater.riches += Currency(self.reward * Decimal(self.work_time), 'gold')
@@ -67,7 +78,6 @@ class Act:
             if bohater.passive[0].val - self.cost < 0:
                 print("Nie posiadasz wystarczająco staminy")
             else:
-                self.act_time = random.random() * 0.25 + 0.25  # od 0.25 do 0.5 sekund /
                 self.bohater = bohater
         else:
             print("Aby skorzystać rozpocznij misje...")
@@ -79,33 +89,43 @@ class Act:
 
 class Rest:
     # przywracanie atrybutów pasywnych co sekundę
-    def __init__(self, dif_level):
-        self.active = False
-        self.dif_level = dif_level
-        self.stamina = Currency(Decimal(random.randrange(100, 1000, 1) / 500) * sum(dif_level), "Stamina")
+    def __init__(self):
+        #jakie wlasciwosci, ulepszenia ma miec ta klasa?
 
-    def regeneration(self, bohater, time, adventure=None):
-        if (adventure is None) or (not adventure.in_action):
-            if bohater.passive[0].val + self.stamina > bohater.passive[0].max:
+        #przyrost na sekunde
+        self.stamina = Currency('1', "Stamina")
+        self.health = Currency('1', "Health")
+        self.ploy = Currency('1', "Ploy")
+        self.spirit = Currency('1', "Spirit")
+        self.clarity = Currency('1', "Clarity")
+        self.passive = [self.stamina, self.health, self.ploy, self.spirit, self.clarity]
+
+    def onClock(self, bohater):
+        counter = 0
+        for i in range(5):
+            if bohater.passive[i].val + self.passive[i].val >= bohater.passive[i].max:
                 bohater.passive[0].val = bohater.passive[0].max
-            else:
-                bohater.passive[0].val += self.stamina * Decimal(time)
-        else:
-            Camp(self.dif_level).regeneration(bohater, time, adventure)
+                counter += 1
+        return counter == 5
 
 
 class Camp:
     # camp działa jak rest; używany w trakcie misji
-    def __init__(self, dif_level):
-        self.dif_level = dif_level
-        self.stamina = Currency(Decimal(random.randrange(100, 500, 1) / 500) * sum(dif_level), "Stamina")
+    def __init__(self):
+        #jakie wlasciwosci, ulepszenia ma miec ta klasa?
 
-    def regeneration(self, bohater, time, adventure=None):
-        if (adventure is not None) and adventure.in_action:
+        #przyrost na sekunde
+        self.stamina = Currency('0.75', "Stamina")
+        self.health = Currency('0.75', "Health")
+        self.ploy = Currency('0.75', "Ploy")
+        self.spirit = Currency('0.75', "Spirit")
+        self.clarity = Currency('0.75', "Clarity")
+        self.passive = [self.stamina, self.health, self.ploy, self.spirit, self.clarity]
 
-            if bohater.passive[0].val + self.stamina > bohater.passive[0].max:
+    def onClock(self, bohater):
+        counter = 0
+        for i in range(5):
+            if bohater.passive[i].val + self.passive[i].val >= bohater.passive[i].max:
                 bohater.passive[0].val = bohater.passive[0].max
-            else:
-                bohater.passive[0].val += self.stamina * Decimal(time)
-        else:
-            Rest(self.dif_level).regeneration(bohater, time, adventure)
+                counter += 1
+        return counter == 5

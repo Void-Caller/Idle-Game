@@ -1,6 +1,8 @@
 #import interfejs as gui
+from decimal import Decimal
 import tkinter as tk
-import adventure
+from adventure import *
+from action import *
 import hero
 
 class Inter(tk.Tk):
@@ -25,22 +27,28 @@ class Inter(tk.Tk):
 
 class Main():
     def __init__(self):
-        #flagi
+        #flagi bohatera - byc moze powinny byc utworzone w bohaterze
         self.at_work = False
-        self.at_act = False
         self.at_rest = False
         self.at_adventure = False
-
         self.at_camp = False
-
 
         #referencja do bohatera
         self.bohater = hero.Hero("Qw")
 
-        #tablica na przygody do rozpoczecia, w trakcie wykonywania, ukonczone
-        self.available_adventures = [] #usuwamy czy chcemy?
-        self.adventure = [adventure.Adventure([0,0,0,0]) for i in range(4)]
+        #tablica na przygody i prace aktualne i ukonczone
+        self.current_adventure = Adventure([Decimal(0),Decimal(0),Decimal(0),Decimal(0)])
+        self.current_work = Work([Decimal(0),Decimal(0),Decimal(0),Decimal(0)])
+        self.rest = Rest()
+        self.camp = Camp()
+
         self.completedAdventures = []
+        self.completedWorks = []
+
+
+
+        self.preparedAdventures = []
+        self.completedWorks = []
 
         #timer
         self.clock_started = False
@@ -49,8 +57,6 @@ class Main():
         self.seconds = 0
         self.gui = Inter(self)
         self.gui.mainloop()
-        #referencja do interfejsu
-        #self.gui = gui
 
     #trzeba wywolac z interfejsu gdy chcemy zaczac gre
     def set_clock(self):
@@ -58,7 +64,6 @@ class Main():
             self.clock_started = True
             if not self.drop_timers:
                 self.continue_clock = True
-            #self.clock_working = True
             self.gui.after(1000, self.update_clock)
 
     def stop_clock(self):
@@ -66,6 +71,8 @@ class Main():
             self.clock_started = False
             self.continue_clock = False
             self.drop_timers +=1
+
+
 
     def update_clock(self):
         if not self.continue_clock:
@@ -75,23 +82,56 @@ class Main():
             return
         self.seconds += 1
         self.gui.after(1000, self.update_clock)
-        #if self.at_rest:
-        #    pass
-        if self.at_adventure:
+
+        #rest na zyczenie gracza lub w ramach worka po zmeczeniu
+        if self.at_rest:
+            if self.rest.onClock(self.bohater):
+                self.at_rest = False
+
+        elif self.at_work:
             try:
-                for i in self.adventure:
-                    if i.onClock(self.bohater):
-                        self.adventure.remove(i)
-                        i.in_action = False
-                        self.completedAdventures.append(i)
-            except adventure.CampException:
-                for i in self.adventure:
-                    i.in_action = False
-                self.at_adventure = False
+                if self.current_work.onClock(self.bohater):
+                    self.completedWorks.append(self.current_work)
+                    self.at_work = False
+            except RestException:
+                self.at_rest = True
+
+        elif self.at_camp:
+            if self.camp.onClock(self.bohater):
+                self.at_camp = False
+
+        elif self.at_adventure:
+            try:
+                if self.current_adventure.onClock(self.bohater):
+                    self.completedAdventures.append([self.current_adventure.name, self.current_adventure.dif_level])
+                    self.at_adventure = False
+            except CampException:
                 self.at_camp = True
-                #akcja camp
+
         #przykladowe zwracanie czasu gry - przerobic na nasz  interfejs
         self.gui.set_title(self.seconds)
+
+
+
+#-----------------przykladowe funkcje-------------------------------
+
+
+    def prepareAdventures(self):
+        #pobrac z interfejsu wpisane wartosci dif_level
+        dif_level = [1,2,3,4]
+        self.preparedAdventures = [Adventure(dif_level) for i in range(3)]
+
+    def startAdventure(self, index):
+        if self.at_adventure or self.at_work:
+            #return false
+            pass
+        self.current_adventure = self.preparedAdventures[index]
+        self.at_adventure = True
+        #z pozostalymi przygodami robcie co chcecie, co latwiej
+        self.preparedAdventures = []
+
+
+
 
 if __name__ == '__main__':
     start = Main()

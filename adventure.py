@@ -28,7 +28,8 @@ class CurrencyContainer:
             self.print_list.append(self.treasures)
 
 
-itemNames = ['Weapon1', 'Weapon2']
+itemNames = [['Sword', 'Axe', 'Spear', "Club"], ['Helmet', 'Coif', 'Mask', 'Hood'], ['Mail', 'Furs', 'Scale', 'Hamata'], ['Ring', 'Band', 'Cuff', 'Braclet']]
+itemPrefixes = ['Crimmerian', 'Scythian', 'Ancient', 'Aquilonian', 'Stygian', 'Bloody']
 itemTypes = ['Weapon', 'Helmet', 'Armor', 'Ring']
 
 class ItemContainer:
@@ -38,7 +39,8 @@ class ItemContainer:
         amount = random.randint(8, 12) * challenges_count // 50 # 1 item na 4-6 wyzwan
         for i in range(amount):
             #losowanie nazwy przedmiotu
-            name = random.choice(itemNames)
+            type_ind = random.randint(0,3)
+            name = random.choice(itemPrefixes) + ' ' + random.choice(itemNames[type_ind])
             #losowanie typu przedmiotu
             type = random.choice(itemTypes)
 
@@ -46,15 +48,15 @@ class ItemContainer:
             rarity = 0
             rar = random.random()
             if rar < 0.75:
-                rarity = 1
+                rarity = Decimal('1')
             elif rar >=0.75 and rar < 0.9:
-                rarity = 1.25
+                rarity = Decimal('1.25')
                 name = 'Strong ' + name
             elif rar >=0.9 and rar < 0.99:
-                rarity = 1.5
+                rarity = Decimal('1.5')
                 name = 'Masterwork ' + name
             else:
-                rarity = 2
+                rarity = Decimal('2.5')
                 name = 'Legendary ' + name
 
 
@@ -64,21 +66,18 @@ class ItemContainer:
 
             #losowanie atrybutu wzmacnianego przez przedmiot
             #losowanie i zapisanie bonusu
-            atributes[tmp.pop(random.randrange(len(tmp)))] = Decimal((random.randrange(5, 15, 1) / 50)*dif_level[i]*rarity)
+            atributes[tmp.pop(random.randrange(len(tmp)))] = (Decimal(random.randrange(5, 15, 1)) / Decimal(50)) * dif_level * rarity
             #sprawdzanie czy wzmacniany jest drugi atrybut, trzeci i czwarty
             if random.random() < 0.4:
-                atributes[tmp.pop(random.randrange(len(tmp)))] = Decimal(
-                    (random.randrange(5, 15, 1) / 50) * dif_level[i] * rarity)
+                atributes[tmp.pop(random.randrange(len(tmp)))] = (Decimal(random.randrange(5, 15, 1)) / Decimal(50)) * dif_level * rarity
                 if random.random() < 0.4:
-                    atributes[tmp.pop(random.randrange(len(tmp)))] = Decimal(
-                        (random.randrange(5, 15, 1) / 50) * dif_level[i] * rarity)
+                    atributes[tmp.pop(random.randrange(len(tmp)))] = (Decimal(random.randrange(5, 15, 1)) / Decimal(50)) * dif_level * rarity
                     if random.random() < 0.4:
-                        atributes[tmp.pop(random.randrange(len(tmp)))] = Decimal(
-                            (random.randrange(5, 15, 1) / 50) * dif_level[i] * rarity)
+                        atributes[tmp.pop(random.randrange(len(tmp)))] = (Decimal(random.randrange(5, 15, 1)) / Decimal(50)) * dif_level * rarity
 
             minimum = [0,0,0,0]
             for i in range(4):
-                minimum[i] = (random.randrange(5, 15, 1) / 50)*dif_level[i]
+                minimum[i] = (Decimal(random.randrange(5, 15, 1)) / Decimal(50)) * dif_level
             self.items.append(Item(name, type, minimum=minimum, m=atributes[0], c=atributes[1], p=atributes[2], l=atributes[3]))
 
 
