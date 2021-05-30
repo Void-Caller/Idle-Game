@@ -92,10 +92,6 @@ class Reward:
         return self.items.items
 
 
-# todo ustawienie parametrów losowania oraz
-# aktualizacja wraz z postepem gry (coraz wyzsze przedzialy losowania)
-# i generowanie coraz lepszych przedmiotow - tutaj czy w klasie Item????? - Lukasz wie
-
 challenge_names = ["Wyzwanie1", "Walka z niedzwiedziem", "Przeplyniecie rzeki"]
 adventure_names = ["Przygoda1", "Wyprawa w gory"]
 
@@ -109,7 +105,6 @@ class Challenge:  # wyzwanie
         self.name = random.choice(challenge_names)
         self.difficulty = [Decimal(random.randrange(50, 150, 1) / 10) * dif_level[i] for i in range(4)]
         self.reward = Reward(self.difficulty, 'Challenge')
-        # self.type = type            #[False,False,False,False]
         #testowane 4 atrybuty aktywne
         self.cost = [Decimal(random.randrange(50, 100, 1) / 500) * self.difficulty[i] for i in range(4)]
         #piaty atrybut nieodpowiadajacy testowanym atrybutom todo balans
@@ -136,26 +131,19 @@ class Challenge:  # wyzwanie
 
 class Adventure:  # przygoda
     def __init__(self, diff_level):
+        self.dif_level = diff_level
         self.name = random.choice(adventure_names)
         self.amount = random.randint(4, 20)
         self.challenges = [Challenge(diff_level) for i in range(self.amount)]
         self.challenge_index = 0
-        self.in_action = False
         self.reward = Reward(diff_level, 'Adventure', self.amount)
         # todo pasek postepu przygody - gdzie?
         # todo pasek postepu danego wyzwania - gdzie?
 
-    def start(self):
-        self.in_action = True
-
-    def stop(self):
-        self.in_action = False
 
     '''Zwraca bool czy przygoda zostala ukonczona. 
-    rzuca blad CampException jezeli trzeba zastopowac wszystkie przygody, bo wyczerpaly sie atrybuty pasywne.'''
-    #todo Wtedy trzeba w nadrzednej metodzie wywolac metode stop dla wszystkich przygod gracza.
+    rzuca blad CampException jezeli trzeba zastopowac przygode, bo wyczerpaly sie atrybuty pasywne.'''
     def onClock(self, bohater):
-        if self.in_action:
             try:
                 if self.challenges[self.challenge_index].onClock(bohater):
                     bohater.applyReward(self.challenges[self.challenge_index].reward)
@@ -163,11 +151,9 @@ class Adventure:  # przygoda
                     if self.challenge_index != self.amount:
                         return False
                     bohater.applyReward(self.reward)
-                    self.in_action = False
                     return True
             except CampException:
                 raise  # do nadrzednej metody
-#todo w nadrzednej metodzie - czy probujemy wykonac nastepne wyzwania w nadziei, ze starczy na nie atr pasywnych, czy pomijamy to?
             except Exception as e:
                 print(e)
                 print("ADVENTURE EXCEPTION")
