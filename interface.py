@@ -1,8 +1,10 @@
+import random
 import time
 import tkinter as tk
 from tkinter import ttk
 from tkinter import font as tkfont
 from threading import Thread, Event
+import adventure
 
 import decimal
 
@@ -126,6 +128,47 @@ class GameView(tk.Frame):
         self.game_font = tkfont.Font(
             family='Helvetica', size=10, weight="bold")
 
+        self.__init_currencies()
+        self.__init_attributies()
+        self.__init_passive_attributies()
+        self.__init_passive_attributies_progress_bars()
+        self.__init_buttons()
+        self.__init_adventures()
+        self.__init_challenges()
+
+        # Koszt Ulepszenia
+        self.might_upgrade_cost = tk.Label(self, text='1.00')
+        self.might_upgrade_cost.grid(row=4, column=3, sticky="w")
+        self.cunning_upgrade_cost = tk.Label(self, text='1.00')
+        self.cunning_upgrade_cost.grid(row=5, column=3, sticky="w")
+        self.psyche_upgrade_cost = tk.Label(self, text='1.00')
+        self.psyche_upgrade_cost.grid(row=6, column=3, sticky="w")
+        self.lore_upgrade_cost = tk.Label(self, text='1.00')
+        self.lore_upgrade_cost.grid(row=7, column=3, sticky="w")
+
+        # Status
+        self.status_label = tk.Label(self, text="Idle",
+                                     font=tkfont.Font(family='Helvetica', size=12, weight="bold"),
+                                     anchor='center')
+        self.status_label.grid(row=14, column=4, sticky="nwse", columnspan=1)
+
+        # Hero name
+        tk.Label(self, text=self.controller.hero.name,
+                 font=tkfont.Font(family='Helvetica', size=12, weight="bold"),
+                 anchor='center').grid(row=14, column=2, sticky="nwse", columnspan=1)
+        self.hero_level_label = tk.Label(self, text="Lv " + str(self.controller.hero.level),
+                                         font=tkfont.Font(family='Helvetica',
+                                                          size=12, weight="bold"), anchor='center')
+        self.hero_level_label.grid(row=14, column=3, sticky="nwse", columnspan=1)
+
+        # some_lb.grid(row=0, column=0)
+
+        for x in range(20):
+            self.rowconfigure(x, weight=1)
+        for y in range(7):
+            self.columnconfigure(y, weight=1)
+
+    def __init_currencies(self):
         tk.Label(self, text='Riches', bg='#ccfffc').grid(
             row=0, column=0, sticky="nwse", columnspan=2)
 
@@ -141,6 +184,7 @@ class GameView(tk.Frame):
             self, text="0", font=self.game_font, anchor='e')
         self.treasures_value.grid(row=2, column=1, sticky="nwse")
 
+    def __init_attributies(self):
         # Atrybuty
         tk.Label(self, text='Active', bg='#ccfffc').grid(
             row=3, column=0, sticky="nwse", columnspan=2)
@@ -166,6 +210,7 @@ class GameView(tk.Frame):
             self, text="0", font=self.game_font, anchor='e')
         self.lore_value.grid(row=7, column=1, sticky="nwse")
 
+    def __init_passive_attributies(self):
         # Atrybuty
         tk.Label(self, text='Passive', bg='#ccfffc').grid(
             row=9, column=0, sticky="nwse", columnspan=2)
@@ -196,6 +241,7 @@ class GameView(tk.Frame):
             self, text="0", font=self.game_font, anchor='e')
         self.clarity_value.grid(row=14, column=1, sticky="nwse")
 
+    def __init_passive_attributies_progress_bars(self):
         # Atrybuty Pasywne
         tk.Label(self, text='Stamina', bg='#ccfffc').grid(
             row=0, column=5, sticky="nwse", columnspan=2)
@@ -223,54 +269,77 @@ class GameView(tk.Frame):
             self, orient=tk.HORIZONTAL, length=100, mode='determinate')  # variable=?
         self.clarity_prbar.grid(row=9, column=5, sticky="ew")
 
+    def __init_buttons(self):
         # Buttons
         self.work_btn = tk.Button(self, text="Work", command=lambda: self.button_click(
-            "Work")).grid(row=0, column=2, sticky="nwse", padx=2, pady=2)
-        self.rest_btn = tk.Button(self, text="Rest", command=lambda: self.button_click(
-            "Rest")).grid(row=0, column=3, sticky="nwse", padx=2, pady=2)
-        self.adventure_btn = tk.Button(self, text="Adventure", command=lambda: self.button_click(
-            "Adventure")).grid(row=0, column=4, sticky="nwse", padx=2, pady=2)
-        self.challenge_btn = tk.Button(self, text="Challenge", command=lambda: self.button_click(
-            "Challenge")).grid(row=1, column=2, sticky="nwse", padx=2, pady=2)
-
-        self.equipment_btn = tk.Button(self, text="Equipment", command=lambda: self.controller.show_frame("EquipmentView"))\
+            "Work")).grid(row=0, column=2, sticky="nwse", rowspan=2)
+        self.rest_btn = tk.Button(self, text="      Rest      ", command=lambda: self.button_click(
+            "Rest")).grid(row=0, column=4, sticky="nwse", rowspan=2)
+        # Equipment
+        self.equipment_btn = tk.Button(self, text="Equipment",
+                                       command=lambda: self.controller.show_frame("EquipmentView")) \
             .grid(row=3, column=2, sticky="nwse", padx=2, pady=2)
         # Upgrade Buttons
-        self.might_upgrade_btn = tk.Button(self, text="Train", command=lambda: self.train("Might"))\
+        self.might_upgrade_btn = tk.Button(self, text="Train", command=lambda: self.train("Might")) \
             .grid(row=4, column=2, sticky="nwse", padx=2, pady=2)
-        self.cunning_upgrade_btn = tk.Button(self, text="Train", command=lambda: self.train("Cunning"))\
+        self.cunning_upgrade_btn = tk.Button(self, text="Train", command=lambda: self.train("Cunning")) \
             .grid(row=5, column=2, sticky="nwse", padx=2, pady=2)
-        self.psyche_upgrade_btn = tk.Button(self, text="Train", command=lambda: self.train("Psyche"))\
+        self.psyche_upgrade_btn = tk.Button(self, text="Train", command=lambda: self.train("Psyche")) \
             .grid(row=6, column=2, sticky="nwse", padx=2, pady=2)
-        self.lore_upgrade_btn = tk.Button(self, text="Train", command=lambda: self.train("Lore"))\
+        self.lore_upgrade_btn = tk.Button(self, text="Train", command=lambda: self.train("Lore")) \
             .grid(row=7, column=2, sticky="nwse", padx=2, pady=2)
-
-        # Koszt Ulepszenia
-        self.might_upgrade_cost = tk.Label(self, text='1.00')
-        self.might_upgrade_cost.grid(row=4, column=3, sticky="w")
-        self.cunning_upgrade_cost = tk.Label(self, text='1.00')
-        self.cunning_upgrade_cost.grid(row=5, column=3, sticky="w")
-        self.psyche_upgrade_cost = tk.Label(self, text='1.00')
-        self.psyche_upgrade_cost.grid(row=6, column=3, sticky="w")
-        self.lore_upgrade_cost = tk.Label(self, text='1.00')
-        self.lore_upgrade_cost.grid(row=7, column=3, sticky="w")
 
         self.exit_btn = tk.Button(self, text="Logout", command=lambda: logout(self, self.controller)) \
             .grid(row=14, column=5, sticky="nwse", columnspan=3, padx=2, pady=2)
+        # self.adventure_btn = tk.Button(self, text="Adventure", command=lambda: self.button_click(
+        #     "Adventure")).grid(row=0, column=4, sticky="nwse", padx=2, pady=2)
+        # self.challenge_btn = tk.Button(self, text="Challenge", command=lambda: self.button_click(
+        #     "Challenge")).grid(row=1, column=2, sticky="nwse", padx=2, pady=2)
 
-        # Status
-        self.status_label = tk.Label(self, text="Idle",
-                                     font=tkfont.Font(
-                                         family='Helvetica', size=24, weight="bold"),
-                                     anchor='center')
-        self.status_label.grid(row=14, column=2, sticky="nwse", columnspan=3)
+    def __init_adventures(self):
+        # Adventures
+        self.adventure_label = tk.Label(self, text='Adventures', bg='#ccfffc')
+        self.adventure_label.grid(row=9, column=3, sticky="nwse", columnspan=1)
 
-        # some_lb.grid(row=0, column=0)
+        self.adv_1_btn = tk.Button(self, text="Adventure", command=lambda: self.adv_start('Adventure', 0))
+        self.adv_1_btn.grid(row=10, column=2, sticky="nwse", rowspan=2)
+        self.adv_2_btn = tk.Button(self, text="Adventure", command=lambda: self.adv_start('Adventure', 1))
+        self.adv_2_btn.grid(row=10, column=3, sticky="nwse", rowspan=2)
+        self.adv_3_btn = tk.Button(self, text="Adventure", command=lambda: self.adv_start('Adventure', 2))
+        self.adv_3_btn.grid(row=10, column=4, sticky="nwse", rowspan=2)
 
-        for x in range(20):
-            self.rowconfigure(x, weight=1)
-        for y in range(10):
-            self.columnconfigure(y, weight=1)
+        self.adventures_btns = []
+        self.adventures_btns.append(self.adv_1_btn)
+        self.adventures_btns.append(self.adv_2_btn)
+        self.adventures_btns.append(self.adv_3_btn)
+
+        self.adventure_entry = tk.Entry(self, text='Username', font=self.game_font, width=5)
+        self.adventure_entry.grid(row=12, column=3, sticky='ew')
+
+        self.adventure_generate_btn = tk.Button(self, text="Generate",
+                  command=lambda: self.generate_adventures(self.adventure_entry.get()))
+        self.adventure_generate_btn.grid(row=12, column=4, sticky="nwse")
+
+    def __init_challenges(self):
+        # Challenges
+        self.challenge_label = tk.Label(self, text='Adventure Challenge', bg='#ccfffc')
+        self.challenge_label.grid(row=9, column=3, sticky="nwse", columnspan=1)
+
+        self.challenge_btn = tk.Button(self, text="Test Challenge", command=lambda: self.adv_start('Challenge', 0))
+        self.challenge_btn.grid(row=11, column=3, sticky="nwse", rowspan=2)
+
+        self.challenge_progressbar = ttk.Progressbar(
+            self, orient=tk.HORIZONTAL, length=300, mode='determinate')  # variable=?
+        self.challenge_progressbar.grid(row=10, column=2, columnspan=3)
+        self.challenge_progressbar.grid_remove()
+
+        self.challenge_rem_label = tk.Label(self, text='Remaining: 5', bg='#ccfffc')
+        self.challenge_rem_label.grid(row=13, column=3, sticky="nwse", columnspan=1)
+
+        self.challenge_label.grid_remove()
+        self.challenge_rem_label.grid_remove()
+        self.challenge_btn.grid_remove()
+        self.challenge_progressbar.grid_remove()
 
     def __init__(self, parent, controller):
         """Konstruktor dla GameView.
@@ -284,13 +353,16 @@ class GameView(tk.Frame):
         self.resting = False
         self.working = False
         self.in_adventure = False
-        self.dif_level = [1, 1, 1, 1]
-        self.adventure = None
+        self.in_challenge = False
+        self.active_adventure = None
+        self.active_challenge = None
+        self.adventures = []
 
         self.__init_gui__()
 
         self.start()
         self.refresh()
+        # self.set_challenges()
 
     def train(self, attribute_name):
         bohater = self.controller.hero
@@ -304,9 +376,9 @@ class GameView(tk.Frame):
             self.cunning_upgrade_cost.config(text=large_number_format(
                 decimal.Decimal(2) ** (bohater.cunning_base.val - 1)))
             self.lore_upgrade_cost.config(text=large_number_format(
-                decimal.Decimal(2) ** (bohater.psyche_base.val - 1)))
-            self.psyche_upgrade_cost.config(text=large_number_format(
                 decimal.Decimal(2) ** (bohater.lore_base.val - 1)))
+            self.psyche_upgrade_cost.config(text=large_number_format(
+                decimal.Decimal(2) ** (bohater.psyche_base.val - 1)))
 
     def work_timeout(self, work):
         time.sleep(work.work_time)
@@ -315,16 +387,27 @@ class GameView(tk.Frame):
         self.status_label['text'] = 'Idle'
         self.working = False
 
+    def generate_adventures(self, level):
+        try:
+            level = int(level)
+        except ValueError:
+            return
+        self.adventures = []
+        for i in range(3):
+            self.adventures.append(adventure.Adventure(level))
+            self.adventures_btns[i]['text'] = self.adventures[i].name
+
     def button_click(self, name):
 
+        bohater = self.controller.hero
         if name == "Work":
             if not self.resting and not self.working:
                 work = None
 
                 if self.in_adventure:
-                    work = action.Act(self.dif_level)
+                    work = action.Act(bohater.level)
                 else:
-                    work = action.Work(self.dif_level)
+                    work = action.Work(bohater.level)
 
                 if not work.act(self.controller.hero):
                     return
@@ -343,6 +426,21 @@ class GameView(tk.Frame):
                 else:
                     self.status_label['text'] = 'Idle'
 
+    def adv_start(self, type, id):
+
+        # Hide Adventures
+        self.adventure_entry.grid_remove()
+        self.adventure_label.grid_remove()
+        self.adventure_generate_btn.grid_remove()
+        for i in range(3):
+            self.adventures_btns[i].grid_remove()
+
+        # Show Challenge
+        self.challenge_label.grid()
+        self.challenge_rem_label.grid()
+        self.challenge_btn.grid()
+        self.challenge_progressbar.grid()
+
     def start(self):
         self.stamina_prbar['maximum'] = self.controller.hero.stamina.max
         self.health_prbar['maximum'] = self.controller.hero.health.max
@@ -350,12 +448,19 @@ class GameView(tk.Frame):
         self.spirit_prbar['maximum'] = self.controller.hero.spirit.max
         self.clarity_prbar['maximum'] = self.controller.hero.clarity.max
 
+        self.generate_adventures(1)
+
     def refresh(self):
         """Uaktualnij dane na stronie"""
         self.after(33, self.refresh)  # 30 fpsow
 
         d_time = time.time() - self.elapsed
         self.elapsed = time.time()
+
+        if self.in_adventure:
+            pass
+            self.active_challenge.elapsed += d_time
+            self.challenge_progressbar['value'] = self.active_challenge.elapsed
 
         if self.resting:
             rest = action.Rest(self.dif_level)
@@ -397,6 +502,44 @@ class GameView(tk.Frame):
     def reset(self):
         """Zresetuj stronę do stanu początkowego"""
         pass
+
+    def set_challenges(self, clr=False):
+        if clr:
+            for i in range(3):
+                self.challenges_btns[i].grid_remove()
+                self.adventures_btns[i].grid_remove()
+            self.adventure_label.grid_remove()
+            self.challenge_label.grid_remove()
+            self.challenge_progressbar.grid()
+            return
+        else:
+            for i in range(3):
+                self.challenges_btns[i].grid()
+                self.adventures_btns[i].grid()
+            self.adventure_label.grid()
+            self.challenge_label.grid()
+            self.challenge_progressbar.grid_remove()
+
+        hero_lv = self.controller.hero.level
+
+        self.challenges = []
+        for i in range(3):
+            self.challenges.append(adventure.Challenge(hero_lv + random.randint(0, 1)))
+            string = self.challenges[i].name + "\n"
+            for j in range(4):
+                string = string + large_number_format(self.challenges[i].cost[j]) + ", "
+            self.challenges_btns[i]['text'] = string
+
+        self.adventures = []
+        for i in range(3):
+            self.adventures.append(adventure.Adventure(hero_lv + random.randint(0, 1)))
+            string = self.adventures[i].name + "\n"
+            for j in range(4):
+                sum_stat = decimal.Decimal(0)
+                for challenge in self.adventures[i].challenges:
+                    sum_stat += self.challenges[i].difficulty[j]
+                string = string + large_number_format(sum_stat) + " "
+            self.adventures_btns[i]['text'] = string
 
 
 class GameEndView(tk.Frame):
