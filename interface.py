@@ -517,7 +517,8 @@ class GameView(tk.Frame):
 
     def claim_reward(self, object):
         bohater = self.controller.hero
-        # bohater.exp += object.reward.waluta.exp
+        for i in range(4):
+            bohater.active_exp[i].val += object.reward.waluta.exp[i]
         bohater.riches += object.reward.waluta.riches
         bohater.treasures += object.reward.waluta.treasures
 
