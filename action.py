@@ -78,21 +78,22 @@ class Rest:
     def __init__(self):
         #jakie wlasciwosci, ulepszenia ma miec ta klasa?
 
-        #przyrost na sekunde
-        self.stamina = Currency('1', "Stamina")
-        self.health = Currency('1', "Health")
-        self.ploy = Currency('1', "Ploy")
-        self.spirit = Currency('1', "Spirit")
-        self.clarity = Currency('1', "Clarity")
-        self.passive = [self.stamina, self.health, self.ploy, self.spirit, self.clarity]
+        #przyrost na sekunde #todo kto sie orientuje cotu trzeba - passiveatribute czy currency i jaki string
+        self.passive = [Currency('1', "Stamina"),
+                        Currency('1', "Health"),
+                        Currency('1', "Ploy"),
+                        Currency('1', "Spirit"),
+                        Currency('1', "Clarity")]
 
     # Do usuniecia?
     def onClock(self, bohater):
         counter = 0
         for i in range(5):
             if bohater.passive[i].val + self.passive[i].val >= bohater.passive[i].max:
-                bohater.passive[0].val = bohater.passive[0].max
+                bohater.passive[i].val = bohater.passive[i].max
                 counter += 1
+            else:
+                bohater.passive[i].val += self.passive[i].val
         return counter == 5
 
     def update(self, bohater, d_time):
@@ -113,18 +114,18 @@ class Camp:
     def __init__(self):
         #jakie wlasciwosci, ulepszenia ma miec ta klasa?
 
-        #przyrost na sekunde
-        self.stamina = Currency('0.75', "Stamina")
-        self.health = Currency('0.75', "Health")
-        self.ploy = Currency('0.75', "Ploy")
-        self.spirit = Currency('0.75', "Spirit")
-        self.clarity = Currency('0.75', "Clarity")
-        self.passive = [self.stamina, self.health, self.ploy, self.spirit, self.clarity]
+        #przyrost na sekunde #todo kto sie orientuje cotu trzeba - passiveatribute czy currency i jaki string
+        self.passive = [Currency('0.75', "Stamina"),
+                        Currency('0.75', "Health"),
+                        Currency('0.75', "Ploy"),
+                        Currency('0.75', "Spirit"),
+                        Currency('0.75', "Clarity")]
 
     def onClock(self, bohater):
         counter = 0
         for i in range(5):
             if bohater.passive[i].val + self.passive[i].val >= bohater.passive[i].max:
-                bohater.passive[0].val = bohater.passive[0].max
+                bohater.passive[i].val = bohater.passive[i].max
                 counter += 1
+            else: bohater.passive[i].val += self.passive[i].val
         return counter == 5
