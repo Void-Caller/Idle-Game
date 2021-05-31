@@ -10,58 +10,44 @@ import random
 def RestException(Exception):
     pass
 
+
 class Work:
     # czynność trwająca ileś sekund; zużywa atrybuty pasywne
-    def __init__(self, level):
+    # work_type wybieramy z interfacu czy random??
+    def __init__(self, level, hero, work_type=-1, adventure=None):
         self.level = level #Decimal lub int
-        self.work_time = random.randint(4,6)
+        self.elapsed_time = 0.0
+        self.work_time = random.randint(4, 6)
 
-    def onClock(self, bohater):
-        #ulepszenia statow bohatera
-        self.work_time -= 1
-        if self.work_time == 0:
-            return True
-        return False
+        if work_type == -1:
+            work_type = random.randint(0, 3)
+        print(work_type)
 
-    #todo lub usunac
-    def act(self, bohater, type=0, adventure=None):
+        self.work_type = work_type
+        self.cost = (Decimal(random.randrange(5, 10, 1) / 100) * sum(hero.get_attr())) / Decimal(self.work_time)
+        self.reward = (Decimal(random.randrange(5, 50, 1) / 100) * sum(hero.get_attr())) / Decimal(self.work_time)
+
+    def update(self, hero, d_time, adventure=None):
         """
-        Generowanie punktów doświadczenia dla 4 trybów:
-            0 generuje might_exp
-            1 generuje cunning_exp
-            2 generuje psyche_exp
-            3 generuje lore_exp
+        Returns:
+            True - work ended
+            False - work in progress
         """
-        if (adventure is None) or (not adventure.in_action):
-            if type == 0:
-                self.nameExp = "might_exp"
-                self.namePassive = "Stamina"
-            elif type == 1:
-                self.nameExp = "cunning_exp"
-                self.namePassive = "Health"
-            elif type == 2:
-                self.nameExp = "psyche_exp"
-                self.namePassive = "Ploy"
-            elif type == 3:
-                self.nameExp = "lore_exp"
-                self.namePassive = "Spirit"
-
-            self.cost = (Decimal(random.randrange(5, 10, 1) / 100) * sum(self.dif_level))
-            self.reward = (Decimal(random.randrange(5, 50, 1) / 100) * sum(self.dif_level))
-
-            if bohater.passive[type].val - self.cost < 0:
-                print("Nie posiadasz wystarczająco staminy")
-            else:
-                self.bohater = bohater
-                return True
+        ret = False
+        if self.elapsed_time + d_time > self.work_time:
+            d_time = self.elapsed_time - self.work_time
+            ret = True
         else:
-            print("Aby skorzystać zakończ misje...")
-        return False
+            self.elapsed_time += d_time
 
-    #todo lub usunac
-    def finish(self):
-        self.bohater.passive[0].val -= self.cost * Decimal(self.work_time)
-        self.bohater.riches += Currency(self.reward * Decimal(self.work_time), 'gold')
+        if hero.passive[self.work_type + 1].val - self.cost < 0:
+            print("Nie posiadasz wystarczająco staminy")
+            ret = True
+        else:
+            hero.passive[self.work_type + 1].val -= self.cost
+            hero.active_exp[self.work_type].val += self.reward
+
+        return ret
 
 
 class Act:
@@ -100,6 +86,7 @@ class Rest:
         self.clarity = Currency('1', "Clarity")
         self.passive = [self.stamina, self.health, self.ploy, self.spirit, self.clarity]
 
+    # Do usuniecia?
     def onClock(self, bohater):
         counter = 0
         for i in range(5):
@@ -107,6 +94,18 @@ class Rest:
                 bohater.passive[0].val = bohater.passive[0].max
                 counter += 1
         return counter == 5
+
+    def update(self, bohater, d_time):
+        """
+        Parameters:
+            bohater
+            d_time - czas który upłynął od ostatniej regenracji
+        """
+        for i in range(5):
+            if bohater.passive[i].val + self.passive[i].val >= bohater.passive[i].max:
+                bohater.passive[i].val = bohater.passive[i].max
+            else:
+                bohater.passive[i].val += self.passive[i].val * Decimal(d_time)
 
 
 class Camp:

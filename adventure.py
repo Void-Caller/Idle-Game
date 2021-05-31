@@ -10,6 +10,7 @@ class CurrencyContainer:
         temp = ['might_exp', 'cunning_exp', 'psyche_exp', 'lore_exp']
 
         if forclass == 'Challenge':
+            # sum_dif_level = dif_level[0].val + dif_level[1].val + dif_level[2].val + dif_level[3].val
             self.exp = [Currency(Decimal(random.randrange(100, 300, 1) / 100) * dif_level[i], i) for i in range(4)]
             self.riches = Currency(Decimal(random.randrange(200, 500, 1) / 100) * sum(dif_level), 'gold')
             self.treasures = Currency(0, 'treasure')
@@ -28,64 +29,70 @@ class CurrencyContainer:
             self.print_list.append(self.treasures)
 
 
-itemNames = [['Sword', 'Axe', 'Spear', "Club"], ['Helmet', 'Coif', 'Mask', 'Hood'], ['Mail', 'Furs', 'Scale', 'Hamata'], ['Ring', 'Band', 'Cuff', 'Braclet']]
+itemNames = [['Sword', 'Axe', 'Spear', "Club"], ['Helmet', 'Coif', 'Mask', 'Hood'], ['Mail', 'Furs', 'Scale', 'Hamata'],
+             ['Ring', 'Band', 'Cuff', 'Braclet']]
 itemPrefixes = ['Crimmerian', 'Scythian', 'Ancient', 'Aquilonian', 'Stygian', 'Bloody']
 itemTypes = ['Weapon', 'Helmet', 'Armor', 'Ring']
 
+
 class ItemContainer:
-    #lista przedmiotow za ukonczenie przygody. Dla challenge lista bedzie pusta
+    # lista przedmiotow za ukonczenie przygody. Dla challenge lista bedzie pusta
     def __init__(self, dif_level, challenges_count):
         self.items = []
-        amount = random.randint(8, 12) * challenges_count // 50 # 1 item na 4-6 wyzwan
+        amount = random.randint(8, 12) * challenges_count // 50  # 1 item na 4-6 wyzwan
         for i in range(amount):
-            #losowanie nazwy przedmiotu
-            type_ind = random.randint(0,3)
+            # losowanie nazwy przedmiotu
+            type_ind = random.randint(0, 3)
             name = random.choice(itemPrefixes) + ' ' + random.choice(itemNames[type_ind])
-            #losowanie typu przedmiotu
+            # losowanie typu przedmiotu
             type = random.choice(itemTypes)
 
-            #klasa przedmiotu 75% zwykły, 15% rzadki, 9% mistrzowski, 1% legendarny
+            # klasa przedmiotu 75% zwykły, 15% rzadki, 9% mistrzowski, 1% legendarny
             rarity = 0
             rar = random.random()
             if rar < 0.75:
                 rarity = Decimal('1')
-            elif rar >=0.75 and rar < 0.9:
+            elif rar >= 0.75 and rar < 0.9:
                 rarity = Decimal('1.25')
                 name = 'Strong ' + name
-            elif rar >=0.9 and rar < 0.99:
+            elif rar >= 0.9 and rar < 0.99:
                 rarity = Decimal('1.5')
                 name = 'Masterwork ' + name
             else:
                 rarity = Decimal('2.5')
                 name = 'Legendary ' + name
 
+            # tablica pomocnicza do losowania atrybutów
+            tmp = [0, 1, 2, 3]
+            atributes = [0, 0, 0, 0]
 
-            #tablica pomocnicza do losowania atrybutów
-            tmp = [0,1,2,3]
-            atributes = [0,0,0,0]
-
-            #losowanie atrybutu wzmacnianego przez przedmiot
-            #losowanie i zapisanie bonusu
-            atributes[tmp.pop(random.randrange(len(tmp)))] = (Decimal(random.randrange(5, 15, 1)) / Decimal(50)) * dif_level * rarity
-            #sprawdzanie czy wzmacniany jest drugi atrybut, trzeci i czwarty
+            # losowanie atrybutu wzmacnianego przez przedmiot
+            # losowanie i zapisanie bonusu
+            atributes[tmp.pop(random.randrange(len(tmp)))] = (Decimal(random.randrange(5, 15, 1)) / Decimal(
+                50)) * dif_level * rarity
+            # sprawdzanie czy wzmacniany jest drugi atrybut, trzeci i czwarty
             if random.random() < 0.4:
-                atributes[tmp.pop(random.randrange(len(tmp)))] = (Decimal(random.randrange(5, 15, 1)) / Decimal(50)) * dif_level * rarity
+                atributes[tmp.pop(random.randrange(len(tmp)))] = (Decimal(random.randrange(5, 15, 1)) / Decimal(
+                    50)) * dif_level * rarity
                 if random.random() < 0.4:
-                    atributes[tmp.pop(random.randrange(len(tmp)))] = (Decimal(random.randrange(5, 15, 1)) / Decimal(50)) * dif_level * rarity
+                    atributes[tmp.pop(random.randrange(len(tmp)))] = (Decimal(random.randrange(5, 15, 1)) / Decimal(
+                        50)) * dif_level * rarity
                     if random.random() < 0.4:
-                        atributes[tmp.pop(random.randrange(len(tmp)))] = (Decimal(random.randrange(5, 15, 1)) / Decimal(50)) * dif_level * rarity
+                        atributes[tmp.pop(random.randrange(len(tmp)))] = (Decimal(random.randrange(5, 15, 1)) / Decimal(
+                            50)) * dif_level * rarity
 
-            minimum = [0,0,0,0]
+            minimum = [0, 0, 0, 0]
             for i in range(4):
                 minimum[i] = (Decimal(random.randrange(5, 15, 1)) / Decimal(50)) * dif_level
-            self.items.append(Item(name, type, minimum=minimum, m=atributes[0], c=atributes[1], p=atributes[2], l=atributes[3]))
+            self.items.append(
+                Item(name, type, minimum=minimum, m=atributes[0], c=atributes[1], p=atributes[2], l=atributes[3]))
 
 
 class Reward:
     # generowanie i przechowywanie nagrody za adventure/challenge
     def __init__(self, diff_level, type, challengesCount=0):
         self.waluta = CurrencyContainer(diff_level, type)
-        self.items = ItemContainer(diff_level, challengesCount)
+        # self.items = ItemContainer(diff_level, challengesCount)
 
     def getItems(self):
         return self.items.items
@@ -104,11 +111,66 @@ class Challenge:  # wyzwanie
         self.name = random.choice(challenge_names)
         self.difficulty = [Decimal(random.randrange(50, 150, 1) / 10) * dif_level[i] for i in range(4)]
         self.reward = Reward(self.difficulty, 'Challenge')
-        # piaty atrybut nieodpowiadajacy testowanym atrybutom todo balans
-        self.cost = [Decimal(random.randrange(50, 100, 1) / 1800 * sum(dif_level))]
+        self.cost = []
         # testowane 4 atrybuty aktywne
         for i in range(4):
             self.cost.append(Decimal(random.randrange(50, 100, 1) / 500) * self.difficulty[i])
+        # piaty atrybut nieodpowiadajacy testowanym atrybutom todo balans
+        self.cost.append(Decimal(random.randrange(50, 100, 1) / 1800) * sum(dif_level))
+
+        # do progress baru
+        self.progress_current = Decimal(0)
+        self.progress_maximum = Decimal(0)
+        # self.cost_per_sec = [cost/diff for cost in self.cost for diff in self.difficulty]
+        # self.cost / self.difficulty
+        self.time = None
+
+    def get_time(self, hero):
+        self.time = self.difficulty[0]/hero.active[0].val
+        for i in range(1, 4):
+            tmp = self.difficulty[i]/hero.active[i].val
+            if tmp > self.time:
+                self.time = tmp
+        self.progress_maximum = self.time
+        return self.time
+
+    def get_cost(self):
+        cost = []
+        for i in range(4):
+            cost.append(self.cost[i])
+        return cost
+
+    def can_hero_start(self, hero):
+        for i in range(5):
+            if hero.passive[i].val < self.cost[i]:
+                print("false {} < {}".format(hero.passive[i], self.cost[i]))
+                return False
+        return True
+
+    def update(self, bohater, d_time):
+        """return true if completed challenge, false if not"""
+        d_time = Decimal(d_time)
+        # for i in range(5):
+        #     bohater.passive[i].val -= self.cost[i] * d_time
+
+        self.progress_current += d_time
+
+        for i in range(4):
+            value = bohater.active[i].val * d_time
+            # self.cost[i] -= value
+
+        for i in range(4):
+            value = bohater.active[i].val * d_time
+
+            if self.difficulty[i] != 0 and (self.difficulty[i] - value > 0):
+                self.difficulty[i] -= value
+            else:
+                self.difficulty[i] = 0
+
+            bohater.passive[i].val -= (self.cost[i]/self.time) * d_time
+
+        return self.difficulty == [0, 0, 0, 0]
+
 
     '''return true if completed challenge, false if not'''
     def onClock(self, bohater):
@@ -140,23 +202,33 @@ class Adventure:  # przygoda
         # todo pasek postepu przygody - gdzie?
         # todo pasek postepu danego wyzwania - gdzie?
 
+    def get_remaining_challenges(self):
+        return len(self.challenges) - self.challenge_index
+
+    def get_total_costs(self):
+        cost = [Decimal(0), Decimal(0), Decimal(0), Decimal(0)]
+        for challenge in self.challenges:
+            for i in range(4):
+                cost[i] += challenge.cost[i]
+        return cost
 
     '''Zwraca bool czy przygoda zostala ukonczona. 
     rzuca blad CampException jezeli trzeba zastopowac przygode, bo wyczerpaly sie atrybuty pasywne.'''
+
     def onClock(self, bohater):
-            try:
-                if self.challenges[self.challenge_index].onClock(bohater):
-                    bohater.applyReward(self.challenges[self.challenge_index].reward)
-                    self.challenge_index += 1
-                    if self.challenge_index != self.amount:
-                        return False
-                    bohater.applyReward(self.reward)
-                    return True
-            except CampException:
-                raise  # do nadrzednej metody
-            except Exception as e:
-                print(e)
-                print("ADVENTURE EXCEPTION")
+        try:
+            if self.challenges[self.challenge_index].onClock(bohater):
+                bohater.applyReward(self.challenges[self.challenge_index].reward)
+                self.challenge_index += 1
+                if self.challenge_index != self.amount:
+                    return False
+                bohater.applyReward(self.reward)
+                return True
+        except CampException:
+            raise  # do nadrzednej metody
+        except Exception as e:
+            print(e)
+            print("ADVENTURE EXCEPTION")
 
 
 if __name__ == "__main__":

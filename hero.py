@@ -7,10 +7,12 @@ class Hero:
         # nazwa
         self.name = name
         # waluty
-        self.currency_might = Currency(0, 'might_exp')
-        self.currency_cunning = Currency(0, 'cunning_exp')
-        self.currency_psyche = Currency(0, 'psyche_exp')
-        self.currency_lore = Currency(0, 'lore_exp')
+        # self.currency_might = Currency(0, 'might_exp')
+        # self.currency_cunning = Currency(0, 'cunning_exp')
+        # self.currency_psyche = Currency(0, 'psyche_exp')
+        # self.currency_lore = Currency(0, 'lore_exp')
+        self.active_exp = [Currency(0, 'might_exp'), Currency(0, 'cunning_exp'),
+                           Currency(0, 'psyche_exp'),  Currency(0, 'lore_exp')]
         self.treasures = Currency(0, 'treasure')
         self.riches = Currency(0, 'gold')
         # atrybuty czynne
@@ -112,11 +114,15 @@ class Hero:
         for i in range(4):
             print(self.active[i])
 
-
     def printHeroPassive(self):
         for i in range(5):
             print(self.passive[i])
 
+    def get_attr(self):
+        return [self.active[0].val, self.active[1].val, self.active[2].val, self.active[3].val]
+
+    def train(self, attribute_id):
+        self.active[attribute_id] += 1
 
 class Item:
     def __init__(self, name, type, minimum=[0, 0, 0, 0], m=0, c=0, p=0, l=0):
