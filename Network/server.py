@@ -230,7 +230,7 @@ class PacketHandler:
         return outgoing_packet
 
 
-class PacketHandler:
+class Server:
 
     def __listen(self):
         print("Listening...")
