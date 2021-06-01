@@ -40,7 +40,7 @@ class ItemContainer:
     def __init__(self, dif_level, challenges_count):
         self.items = []
 
-        amount = random.randint(8, 12) * challenges_count // 10  # 1 item na 4-6 wyzwan
+        amount = random.randint(8, 12) * challenges_count // 50  # 1 item na 4-6 wyzwan
         for i in range(amount):
             # losowanie nazwy przedmiotu
             type_ind = random.randint(0, 3)

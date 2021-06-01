@@ -131,8 +131,13 @@ class Hero:
             pass
 
     def sell(self, item_id):
+        item = self.eq.all_items[item_id]
+        name = item.name
+        value = item.value
+
         self.riches.val += self.eq.all_items[item_id].value
         del self.eq.all_items[item_id]
+        return [name, value]
 
     def train(self, attribute_id):
         value = 1
