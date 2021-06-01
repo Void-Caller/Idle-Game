@@ -299,7 +299,7 @@ class GameView(tk.Frame):
             "Rest")).grid(row=0, column=4, sticky="nwse", rowspan=2)
         # Equipment
         self.equipment_btn = tk.Button(self, text="Equipment",
-                                       command=lambda: self.controller.show_frame("EquipmentView")) \
+                                       command=lambda: self.controller.frames["EquipmentView"].show_frame()) \
             .grid(row=3, column=2, sticky="nwse", padx=2, pady=2)
         # Upgrade Buttons
         self.might_upgrade_btn = tk.Button(self, text="Train", command=lambda: self.train(0)) \
@@ -390,17 +390,19 @@ class GameView(tk.Frame):
 
     def train(self, index):
         bohater = self.controller.hero
-        cost = decimal.Decimal(2) ** (bohater.active[index].val - 1)
+        cost = decimal.Decimal(2) ** (bohater.train_active[index].val - 1)
         if cost < bohater.riches:
             bohater.train(index)
             bohater.riches.val -= cost
 
             self.costs_labels[index].config(text=large_number_format(
-                decimal.Decimal(2) ** (bohater.active[index].val - 1)))
+                decimal.Decimal(2) ** (bohater.train_active[index].val - 1)))
 
     def generate_adventures(self, level):
         try:
             level = int(level)
+            if level <= 0:
+                return
         except ValueError:
             return
 
@@ -411,7 +413,7 @@ class GameView(tk.Frame):
 
         pattern = "{} - {}\n{} | {} | {} | {}"
         for i in range(3):
-            self.adventures.append(adventure.Adventure(stats))
+            self.adventures.append(adventure.Adventure([level for i in range(4)]))
             cost = self.adventures[i].get_total_costs()
             for j in range(4):
                 cost[j] = large_number_format(cost[j])
@@ -487,7 +489,7 @@ class GameView(tk.Frame):
         self.challenge_rem_label['text'] = "Remaining Challenges: {}".format(
             self.active_adventure.get_remaining_challenges())
 
-        if self.active_adventure.challenge_index + 1 >= len(self.active_adventure.challenges):
+        if self.active_adventure.challenge_index + 1 > len(self.active_adventure.challenges):
             self.claim_reward(self.active_adventure)
             self.adv_end()
             return
@@ -521,6 +523,9 @@ class GameView(tk.Frame):
             bohater.active_exp[i].val += object.reward.waluta.exp[i]
         bohater.riches += object.reward.waluta.riches
         bohater.treasures += object.reward.waluta.treasures
+        for item in object.reward.getItems():
+            item.printItem()
+            bohater.eq.addItem(item)
 
     def start(self):
         self.stamina_prbar['maximum'] = self.controller.hero.passive[0].max
@@ -530,7 +535,6 @@ class GameView(tk.Frame):
         self.clarity_prbar['maximum'] = self.controller.hero.passive[4].max
 
         self.generate_adventures(1)
-        self.tmp = 0
 
     def refresh(self):
         """Uaktualnij dane na stronie"""
@@ -557,7 +561,6 @@ class GameView(tk.Frame):
                         self.set_next_challenge()
                     else:
                         self.challenge_progressbar['value'] = int(self.active_challenge.progress_current)
-
 
         # update text
         self.gold_value['text'] = large_number_format(self.controller.hero.riches.val)
@@ -737,13 +740,91 @@ class EquipmentView(tk.Frame):
         tk.Frame.__init__(self, parent)
         self.controller = controller
 
-        back_btn = tk.Button(self, text="Back", font=controller.main_font,
-                             command=lambda: controller.show_frame("GameView")).grid(row=9, column=4)
+        self.item_string = "{}\n{}\nReq: {}M {}C {}P {}L\n+{}M +{}C +{}P +{}L"  # Name / slot/ Might / Cunning / Psyche / lore
+        self.items_btns = []
+
+        attr_names = attr_names = ["Might:", "Cunning:", "Psyche:", "Lore:"]
+        self.hero_attr_names = [tk.Label(self, bg=('#ccfffc' if i % 2 else '#ccfccc'), borderwidth=2, relief="groove",
+                                         text=attr_names[i]) for i in range(4)]
+        self.hero_attr_values = [tk.Label(self, bg=("#ccfffc" if i % 2 else "#ccfccc"), borderwidth=2, relief="groove",
+                                          ) for i in range(4)]
+
+        slot_names = ["Weapon:", "Helmet:", "Armor:", "Ring:"]
+        self.hero_items_names = [tk.Label(self, bg=('#ccfffc' if i % 2 else '#ccfccc'), borderwidth=2, relief="groove",
+                                          text=slot_names[i]) for i in range(4)]
+        self.hero_items_equipped = [
+            tk.Label(self, bg=("#ccfffc" if i % 2 else "#ccfccc"), borderwidth=2, relief="groove",
+                     text='None') for i in range(4)]
+
+        for i, label in enumerate(self.hero_attr_names):
+            label.grid(row=i, column=0, sticky="nwse")
+
+        for i, label in enumerate(self.hero_attr_values):
+            label.grid(row=i, column=1, sticky="nwse")
+
+        for i, label in enumerate(self.hero_items_names):
+            label.grid(row=5 + i, column=0, sticky="nwse")
+
+        for i, label in enumerate(self.hero_items_equipped):
+            label.grid(row=5 + i, column=1, sticky="nwse")
+
+        tk.Button(self, text="Back", font=controller.main_font,
+                  command=lambda: controller.show_frame("GameView")).grid(
+            row=9, column=0, columnspan=2, sticky="nwse", padx=20, pady=20)
 
         for x in range(10):
             self.rowconfigure(x, weight=1)
-        for y in range(5):
+        for y in range(10):
             self.columnconfigure(y, weight=1)
+
+    def show_frame(self):
+        self.controller.show_frame("EquipmentView")
+        self.update_informations()
+
+    def update_informations(self):
+        # Update Stats
+        for i, label in enumerate(self.hero_attr_values):
+            label['text'] = large_number_format(self.controller.hero.active[i])
+
+        # Update Items
+        for i, label in enumerate(self.hero_items_equipped):
+            item = self.controller.hero.set[i]
+            text = 'None'
+            if item:
+                item_attr = [attr.val for attr in item.item_attr]
+                text = self.item_string.format(item.name, item.type, *item.min_attr, *item_attr)
+            label['text'] = text
+
+        # Update bags
+        # Delete old items
+        for item_btns in self.items_btns:
+            item_btns.destroy()
+
+        for i, eq_item in enumerate(self.controller.hero.eq.all_items):
+        # for i in range(5):
+        #     eq_item = hero.Item("fNazwa przedmiotu", 'Weapon', minimum=[1, 1, 1, 1], m=5, c=6, p=7, l=8)
+
+            item_attr = [attr.val for attr in eq_item.item_attr]
+            text = self.item_string.format(eq_item.name, eq_item.type, *eq_item.min_attr, *item_attr)
+
+            # button = tk.Button(self, text=text, command=lambda: self.equip_item(i))
+            button = tk.Button(self, text=text)
+            button.extra = i
+            button.grid(row=i // 4, column=3 + i % 4)
+            button.bind("<Button-1>", self.equip_item)
+            button.bind("<Button-3>", self.sell_item)  # Button-3 => Right Mouse Button
+            self.items_btns.append(button)
+
+    def equip_item(self, event): # TODO MOZE RZUCIC WYJATEK
+        item_id = event.widget.extra
+        self.controller.hero.equip(item_id)
+        self.update_informations()
+
+    def sell_item(self, event):
+        item_id = event.widget.extra
+        self.controller.hero.sell(item_id)
+        self.update_informations()
+
 
 
 def login(view, controller, username, password):
