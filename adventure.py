@@ -39,7 +39,8 @@ class ItemContainer:
     # lista przedmiotow za ukonczenie przygody. Dla challenge lista bedzie pusta
     def __init__(self, dif_level, challenges_count):
         self.items = []
-        amount = random.randint(8, 12) * challenges_count // 50  # 1 item na 4-6 wyzwan
+
+        amount = random.randint(8, 12) * challenges_count // 10  # 1 item na 4-6 wyzwan
         for i in range(amount):
             # losowanie nazwy przedmiotu
             type_ind = random.randint(0, 3)
@@ -52,10 +53,10 @@ class ItemContainer:
             rar = random.random()
             if rar < 0.75:
                 rarity = Decimal('1')
-            elif rar >= 0.75 and rar < 0.9:
+            elif 0.75 <= rar < 0.9:
                 rarity = Decimal('1.25')
                 name = 'Strong ' + name
-            elif rar >= 0.9 and rar < 0.99:
+            elif 0.9 <= rar < 0.99:
                 rarity = Decimal('1.5')
                 name = 'Masterwork ' + name
             else:
@@ -82,16 +83,17 @@ class ItemContainer:
                             50)) * dif_level[3] * rarity
 
             minimum = [0, 0, 0, 0]
-            for i in range(4):
-                minimum[i] = (Decimal(random.randrange(5, 15, 1)) / Decimal(50)) * dif_level[i]
+            for j in range(4):
+                minimum[j] = (Decimal(random.randrange(5, 15, 1)) / Decimal(50)) * dif_level[j]
+            sell_price = sum(atributes)
             self.items.append(
-                Item(name, type, minimum=minimum, m=atributes[0], c=atributes[1], p=atributes[2], l=atributes[3]))
+                Item(name, type, minimum=minimum,
+                     m=atributes[0], c=atributes[1], p=atributes[2], l=atributes[3], value=sell_price))
 
 
 class Reward:
     # generowanie i przechowywanie nagrody za adventure/challenge
     def __init__(self, diff_level, type, challengesCount=0):
-        print(diff_level)
         self.waluta = CurrencyContainer(diff_level, type)
         self.items = ItemContainer(diff_level, challengesCount)
 

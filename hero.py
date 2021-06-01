@@ -21,6 +21,7 @@ class Hero:
         # 1-Cunning
         # 2-Psyche
         # 3-Lore
+        self.train_active = [Currency(1, 'Might'), Currency(1, 'Cunning'), Currency(1, 'Psyche'), Currency(1, 'Lore')]
         self.active = [Currency(1, 'Might'), Currency(1, 'Cunning'), Currency(1, 'Psyche'), Currency(1, 'Lore')]
         # atrybuty pasywne
         # wszystkie odwołania do atrybutów mają iść przez tablicę
@@ -122,14 +123,28 @@ class Hero:
     def get_attr(self):
         return [self.active[0].val, self.active[1].val, self.active[2].val, self.active[3].val]
 
+    def equip(self, item_id):
+        try:
+            self.setActiveItem(self.eq.all_items[item_id])
+            del self.eq.all_items[item_id]
+        except Exception:
+            pass
+
+    def sell(self, item_id):
+        self.riches.val += self.eq.all_items[item_id].value
+        del self.eq.all_items[item_id]
+
     def train(self, attribute_id):
-        self.active[attribute_id] += 1
+        value = 1
+        self.active[attribute_id] += value
+        self.train_active[attribute_id] += 1
 
 
 class Item:
-    def __init__(self, name, type, minimum=[0, 0, 0, 0], m=0, c=0, p=0, l=0):
+    def __init__(self, name, type, minimum=[0, 0, 0, 0], m=0, c=0, p=0, l=0, value=0):
         self.name = name
         self.type = type
+        self.value = value
 
         # tablica minimalnych atrybutów aktywnych ktore musi miec bohater aby zalozyc przedmiot
         self.min_attr = []
