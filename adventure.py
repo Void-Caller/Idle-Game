@@ -69,21 +69,21 @@ class ItemContainer:
             # losowanie atrybutu wzmacnianego przez przedmiot
             # losowanie i zapisanie bonusu
             atributes[tmp.pop(random.randrange(len(tmp)))] = (Decimal(random.randrange(5, 15, 1)) / Decimal(
-                50)) * dif_level * rarity
+                50)) * dif_level[0] * rarity
             # sprawdzanie czy wzmacniany jest drugi atrybut, trzeci i czwarty
             if random.random() < 0.4:
                 atributes[tmp.pop(random.randrange(len(tmp)))] = (Decimal(random.randrange(5, 15, 1)) / Decimal(
-                    50)) * dif_level * rarity
+                    50)) * dif_level[1] * rarity
                 if random.random() < 0.4:
                     atributes[tmp.pop(random.randrange(len(tmp)))] = (Decimal(random.randrange(5, 15, 1)) / Decimal(
-                        50)) * dif_level * rarity
+                        50)) * dif_level[2] * rarity
                     if random.random() < 0.4:
                         atributes[tmp.pop(random.randrange(len(tmp)))] = (Decimal(random.randrange(5, 15, 1)) / Decimal(
-                            50)) * dif_level * rarity
+                            50)) * dif_level[3] * rarity
 
             minimum = [0, 0, 0, 0]
             for i in range(4):
-                minimum[i] = (Decimal(random.randrange(5, 15, 1)) / Decimal(50)) * dif_level
+                minimum[i] = (Decimal(random.randrange(5, 15, 1)) / Decimal(50)) * dif_level[i]
             self.items.append(
                 Item(name, type, minimum=minimum, m=atributes[0], c=atributes[1], p=atributes[2], l=atributes[3]))
 
@@ -91,8 +91,9 @@ class ItemContainer:
 class Reward:
     # generowanie i przechowywanie nagrody za adventure/challenge
     def __init__(self, diff_level, type, challengesCount=0):
+        print(diff_level)
         self.waluta = CurrencyContainer(diff_level, type)
-        # self.items = ItemContainer(diff_level, challengesCount)
+        self.items = ItemContainer(diff_level, challengesCount)
 
     def getItems(self):
         return self.items.items
@@ -126,9 +127,9 @@ class Challenge:  # wyzwanie
         self.time = None
 
     def get_time(self, hero):
-        self.time = self.difficulty[0]/hero.active[0].val
+        self.time = self.difficulty[0] / hero.active[0].val
         for i in range(1, 4):
-            tmp = self.difficulty[i]/hero.active[i].val
+            tmp = self.difficulty[i] / hero.active[i].val
             if tmp > self.time:
                 self.time = tmp
         self.progress_maximum = self.time
@@ -167,10 +168,9 @@ class Challenge:  # wyzwanie
             else:
                 self.difficulty[i] = 0
 
-            bohater.passive[i].val -= (self.cost[i]/self.time) * d_time
+            bohater.passive[i].val -= (self.cost[i] / self.time) * d_time
 
         return self.difficulty == [0, 0, 0, 0]
-
 
     '''return true if completed challenge, false if not'''
     def onClock(self, bohater):
