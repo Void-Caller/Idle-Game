@@ -3,7 +3,7 @@ import time
 import tkinter as tk
 from tkinter import ttk
 from tkinter import font as tkfont
-from threading import Thread, Event
+from MessagesQueue import ErrorMessage
 import adventure
 
 import decimal
@@ -131,7 +131,7 @@ class GameView(tk.Frame):
         self.__init_currencies()
         self.__init_attributies()
         self.__init_passive_attributies()
-        self.__init_passive_attributies_progress_bars()
+        # self.__init_passive_attributies_progress_bars()
         self.__init_buttons()
         self.__init_adventures()
         self.__init_challenges()
@@ -369,6 +369,8 @@ class GameView(tk.Frame):
             parent: tk.Frame, kontener będący rodzicem strony.
             controller: Application, instancja klasy bazowej
         """
+        self.messages = ErrorMessage(self)
+
         tk.Frame.__init__(self, parent)
         self.controller = controller
         self.elapsed = time.time()
@@ -504,9 +506,9 @@ class GameView(tk.Frame):
         self.challenge_progressbar['value'] = 0
 
     def do_challenge(self):
-
-        if self.active_challenge is not None:
+        if self.active_challenge is not None or self.in_challenge:
             return
+
 
         bohater = self.controller.hero
 
@@ -519,20 +521,29 @@ class GameView(tk.Frame):
 
     def claim_reward(self, object):
         bohater = self.controller.hero
+
+        text = "{} completed\nexp: ({}, {}, {}, {})\nGold: {}"
+        exps = []
         for i in range(4):
             bohater.active_exp[i].val += object.reward.waluta.exp[i]
+            exps.append( large_number_format(object.reward.waluta.exp[i]))
+
         bohater.riches += object.reward.waluta.riches
         bohater.treasures += object.reward.waluta.treasures
+        self.messages.add_message(text.format(object.__class__.__name__, *exps,
+                                              large_number_format(object.reward.waluta.riches)), succ=True)
+
         for item in object.reward.getItems():
-            item.printItem()
+            self.messages.add_message("You found Item\n{}\n{}".format(item.type, item.name), succ=True)
             bohater.eq.addItem(item)
 
+
     def start(self):
-        self.stamina_prbar['maximum'] = self.controller.hero.passive[0].max
-        self.health_prbar['maximum'] = self.controller.hero.passive[1].max
-        self.ploy_prbar['maximum'] = self.controller.hero.passive[2].max
-        self.spirit_prbar['maximum'] = self.controller.hero.passive[3].max
-        self.clarity_prbar['maximum'] = self.controller.hero.passive[4].max
+        # self.stamina_prbar['maximum'] = self.controller.hero.passive[0].max
+        # self.health_prbar['maximum'] = self.controller.hero.passive[1].max
+        # self.ploy_prbar['maximum'] = self.controller.hero.passive[2].max
+        # self.spirit_prbar['maximum'] = self.controller.hero.passive[3].max
+        # self.clarity_prbar['maximum'] = self.controller.hero.passive[4].max
 
         self.generate_adventures(1)
 
@@ -543,6 +554,7 @@ class GameView(tk.Frame):
         d_time = time.time() - self.elapsed
         self.elapsed = time.time()
 
+        self.messages.update(d_time)
         if self.resting:
             rest = action.Rest()
             rest.update(self.controller.hero, d_time)
@@ -572,7 +584,7 @@ class GameView(tk.Frame):
 
         for i in range(5):
             self.passive[i]['text'] = large_number_format(self.controller.hero.passive[i].val)
-            self.passive_bars[i]['value'] = self.controller.hero.passive[i].val
+            # self.passive_bars[i]['value'] = self.controller.hero.passive[i].val
 
     def reset(self):
         """Zresetuj stronę do stanu początkowego"""
@@ -739,6 +751,8 @@ class EquipmentView(tk.Frame):
         """
         tk.Frame.__init__(self, parent)
         self.controller = controller
+        self.elapsed = time.time()
+        self.messages = ErrorMessage(self)
 
         self.item_string = "{}\n{}\nReq: {}M {}C {}P {}L\n+{}M +{}C +{}P +{}L"  # Name / slot/ Might / Cunning / Psyche / lore
         self.items_btns = []
@@ -776,6 +790,16 @@ class EquipmentView(tk.Frame):
             self.rowconfigure(x, weight=1)
         for y in range(10):
             self.columnconfigure(y, weight=1)
+
+        self.refresh()
+
+    def refresh(self):
+        self.after(33, self.refresh)  # 30 fpsow
+
+        d_time = time.time() - self.elapsed
+        self.elapsed = time.time()
+
+        self.messages.update(d_time)
 
     def show_frame(self):
         self.controller.show_frame("EquipmentView")
@@ -822,9 +846,9 @@ class EquipmentView(tk.Frame):
 
     def sell_item(self, event):
         item_id = event.widget.extra
-        self.controller.hero.sell(item_id)
+        info = self.controller.hero.sell(item_id)
+        self.messages.add_message("You sold\n{}\nfor {} gold.".format(*info), succ=True)
         self.update_informations()
-
 
 
 def login(view, controller, username, password):
