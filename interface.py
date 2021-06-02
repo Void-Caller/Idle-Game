@@ -424,7 +424,6 @@ class GameView(tk.Frame):
         else:
             self.messages.add_message("You don't have\nenough exp.")
 
-
     def generate_adventures(self, level):
         try:
             level = int(level)
@@ -457,8 +456,13 @@ class GameView(tk.Frame):
                 self.working = True
                 self.status_label['text'] = 'Working'
 
+            if self.resting:
+                self.messages.add_message("You can't Work\nwhile resting.")
+            if self.in_challenge:
+                self.messages.add_message("You can't Work\nwhile in challenge.")
+
         elif name == "Rest":
-            if not self.working:
+            if not self.working and not self.in_challenge:
                 self.resting = not self.resting
                 if self.resting:
                     self.status_label['text'] = 'Resting'
@@ -467,6 +471,10 @@ class GameView(tk.Frame):
                         self.status_label['text'] = 'In Adventure'
                     else:
                         self.status_label['text'] = 'Idle'
+            if self.working:
+                self.messages.add_message("You can't Rest\nwhile working.")
+            if self.in_challenge:
+                self.messages.add_message("You can't Rest\nwhile in challenge.")
 
     def adv_start(self, type, id):
 
@@ -550,7 +558,7 @@ class GameView(tk.Frame):
             self.challenge_progressbar['maximum'] = int(challenge.progress_maximum)
             self.active_challenge = challenge
         else:
-            self.messages.add_message("You don't heaven\n enought attributes\nto start this challenge.")
+            self.messages.add_message("You don't have\n enough attributes\nto start this challenge.")
 
     def claim_reward(self, quest):
         bohater = self.controller.hero
@@ -587,7 +595,6 @@ class GameView(tk.Frame):
         else:
             self.messages.add_message("You need {} gold\nto upgrade {}.".format(cost, action_name))
 
-
     def start(self):
         # self.stamina_prbar['maximum'] = self.controller.hero.passive[0].max
         # self.health_prbar['maximum'] = self.controller.hero.passive[1].max
@@ -607,7 +614,9 @@ class GameView(tk.Frame):
         self.messages.update(d_time)
         if self.resting:
             rest = action.Rest()
-            rest.update(self.controller.hero, d_time)
+            if rest.update(self.controller.hero, d_time):
+                self.button_click("Rest")
+                self.messages.add_message("Rest completed.", succ=True)
         if self.working:
             ret = self.active_work.update(self.controller.hero, d_time, self.active_adventure);
             if ret != 0:

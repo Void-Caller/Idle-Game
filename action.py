@@ -124,6 +124,9 @@ class Rest:
             else:
                 bohater.passive[i].val += self.passive[i].val * Rest.level * Decimal(d_time)
 
+        ret = [True if bohater.passive[i].val == Decimal(100) else False for i in range(5)]
+        return ret ==[True for i in range(5)]
+
     def upgrade(self, bohater):
         cost = Decimal(100)  # *self.level
         next_cost = Decimal(100)
