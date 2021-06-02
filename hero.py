@@ -139,10 +139,23 @@ class Hero:
         del self.eq.all_items[item_id]
         return [name, value]
 
+    def getNextUpgradeCost(self, attribute_id):
+        cost = Decimal(100)  # todo
+        return cost
+
     def train(self, attribute_id):
-        value = 1
-        self.active[attribute_id] += value
-        self.train_active[attribute_id] += 1
+        value = Decimal(0.5)
+        cost = self.getNextUpgradeCost(attribute_id)
+        success = False
+
+        if cost < self.active_exp[attribute_id]:
+            self.train_active[attribute_id] += 1
+            self.active_exp[attribute_id].val -= cost
+
+            self.active[attribute_id].val += value
+            success = True
+
+        return success, cost, self.getNextUpgradeCost(attribute_id), value
 
 
 class Item:

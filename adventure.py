@@ -170,7 +170,7 @@ class Challenge:  # wyzwanie
             else:
                 self.difficulty[i] = 0
 
-            bohater.passive[i].val -= (self.cost[i] / self.time) * d_time
+            bohater.passive[i + 1].val -= (self.cost[i] / self.time) * d_time
 
         return self.difficulty == [0, 0, 0, 0]
 

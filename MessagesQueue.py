@@ -34,7 +34,7 @@ class Message:
     def update(self, d_time):
         self.elapsed_time += d_time
         if self.elapsed_time > (self.show_time + self.hide_time):
-            self.label.destroy()
+            self.destroy()
             return True
 
         if self.elapsed_time > self.show_time:
@@ -42,6 +42,9 @@ class Message:
             self.label.configure(bg=self.gradient[index])
 
         return False
+
+    def destroy(self):
+        self.label.destroy()
 
 
 class ErrorMessage:
@@ -56,6 +59,16 @@ class ErrorMessage:
 
         for i, message in enumerate(self.messages):
             message.set_grid(row=i, column=6)
+
+    def clear(self, index=-1):
+        if index == -1:
+            for i in range(len(self.messages)):
+                self.messages[i].destroy()
+            self.messages = []
+        else:
+            self.messages[index].destroy()
+            self.messages.pop(index)
+
 
     def update(self, d_time):
         for i, message in enumerate(self.messages):

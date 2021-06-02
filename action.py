@@ -13,41 +13,55 @@ def RestException(Exception):
 
 class Work:
     # czynność trwająca ileś sekund; zużywa atrybuty pasywne
-    # work_type wybieramy z interfacu czy random??
-    def __init__(self, level, hero, work_type=-1, adventure=None):
-        self.level = level #Decimal lub int
+    level = Decimal(1)
+
+    def __init__(self, hero, work_type=-1):
         self.elapsed_time = 0.0
         self.work_time = random.randint(4, 6)
-
-        if work_type == -1:
-            work_type = random.randint(0, 3)
-        print(work_type)
-
         self.work_type = work_type
-        self.cost = (Decimal(random.randrange(5, 10, 1) / 100) * sum(hero.get_attr())) / Decimal(self.work_time)
-        self.reward = (Decimal(random.randrange(5, 50, 1) / 100) * sum(hero.get_attr())) / Decimal(self.work_time)
+
+        self.cost = ((Decimal(random.randrange(5, 10, 1) / 100) * sum(hero.get_attr()))
+                     * Work.level) / Decimal(self.work_time)
+        self.reward = ((Decimal(random.randrange(5, 50, 1) / 100) * sum(hero.get_attr()))
+                       * Work.level) / Decimal(self.work_time)
 
     def update(self, hero, d_time, adventure=None):
         """
         Returns:
-            True - work ended
-            False - work in progress
+            1 - work ended
+            0 - work in progress
+            -1 - not enough stamina
         """
-        ret = False
+        ret = 0
         if self.elapsed_time + d_time > self.work_time:
             d_time = self.elapsed_time - self.work_time
-            ret = True
+            ret = 1
         else:
             self.elapsed_time += d_time
 
-        if hero.passive[self.work_type + 1].val - self.cost < 0:
+        # if hero.passive[self.work_type + 1].val - self.cost < 0:
+        if hero.passive[0].val - self.cost < 0:
             print("Nie posiadasz wystarczająco staminy")
-            ret = True
+            ret = -1
         else:
-            hero.passive[self.work_type + 1].val -= self.cost
+            # TODO zuzywa stamine czy odpowiedni zasob pasywny?
+            # hero.passive[self.work_type + 1].val -= self.cost
+            hero.passive[0].val -= self.cost
             hero.active_exp[self.work_type].val += self.reward
 
         return ret
+
+    def upgrade(self, bohater):
+        cost = Decimal(100)  # *self.level
+        next_cost = Decimal(100)
+        succ = False
+
+        if bohater.riches.val > cost:  # *self.level
+            bohater.riches.val -= cost
+            Work.level += 1
+            succ = True
+
+        return succ, cost, next_cost, Work.level
 
 
 class Act:
@@ -75,10 +89,12 @@ class Act:
 
 class Rest:
     # przywracanie atrybutów pasywnych co sekundę
-    def __init__(self):
-        #jakie wlasciwosci, ulepszenia ma miec ta klasa?
+    level = Decimal(1)
 
-        #przyrost na sekunde #todo kto sie orientuje cotu trzeba - passiveatribute czy currency i jaki string
+    def __init__(self):
+        # jakie wlasciwosci, ulepszenia ma miec ta klasa?
+
+        # przyrost na sekunde #todo kto sie orientuje cotu trzeba - passiveatribute czy currency i jaki string
         self.passive = [Currency('1', "Stamina"),
                         Currency('1', "Health"),
                         Currency('1', "Ploy"),
@@ -106,15 +122,27 @@ class Rest:
             if bohater.passive[i].val + self.passive[i].val >= bohater.passive[i].max:
                 bohater.passive[i].val = bohater.passive[i].max
             else:
-                bohater.passive[i].val += self.passive[i].val * Decimal(d_time)
+                bohater.passive[i].val += self.passive[i].val * Rest.level * Decimal(d_time)
+
+    def upgrade(self, bohater):
+        cost = Decimal(100)  # *self.level
+        next_cost = Decimal(100)
+        succ = False
+
+        if bohater.riches.val > cost:  # *self.level
+            bohater.riches.val -= cost
+            Rest.level += 1
+            succ = True
+
+        return succ, cost, next_cost, Rest.level
 
 
 class Camp:
     # camp działa jak rest; używany w trakcie misji
     def __init__(self):
-        #jakie wlasciwosci, ulepszenia ma miec ta klasa?
+        # jakie wlasciwosci, ulepszenia ma miec ta klasa?
 
-        #przyrost na sekunde #todo kto sie orientuje cotu trzeba - passiveatribute czy currency i jaki string
+        # przyrost na sekunde #todo kto sie orientuje cotu trzeba - passiveatribute czy currency i jaki string
         self.passive = [Currency('0.75', "Stamina"),
                         Currency('0.75', "Health"),
                         Currency('0.75', "Ploy"),
@@ -127,5 +155,6 @@ class Camp:
             if bohater.passive[i].val + self.passive[i].val >= bohater.passive[i].max:
                 bohater.passive[i].val = bohater.passive[i].max
                 counter += 1
-            else: bohater.passive[i].val += self.passive[i].val
+            else:
+                bohater.passive[i].val += self.passive[i].val
         return counter == 5

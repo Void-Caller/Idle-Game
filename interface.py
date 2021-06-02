@@ -138,19 +138,24 @@ class GameView(tk.Frame):
 
         # Koszt Ulepszenia
         self.might_upgrade_cost = tk.Label(self, text='1.00')
-        self.might_upgrade_cost.grid(row=4, column=3, sticky="w")
+        self.might_upgrade_cost.grid(row=4, column=2, sticky="e", padx=5)
         self.cunning_upgrade_cost = tk.Label(self, text='1.00')
-        self.cunning_upgrade_cost.grid(row=5, column=3, sticky="w")
+        self.cunning_upgrade_cost.grid(row=5, column=2, sticky="e", padx=5)
         self.psyche_upgrade_cost = tk.Label(self, text='1.00')
-        self.psyche_upgrade_cost.grid(row=6, column=3, sticky="w")
+        self.psyche_upgrade_cost.grid(row=6, column=2, sticky="e", padx=5)
         self.lore_upgrade_cost = tk.Label(self, text='1.00')
-        self.lore_upgrade_cost.grid(row=7, column=3, sticky="w")
+        self.lore_upgrade_cost.grid(row=7, column=2, sticky="e", padx=5)
 
         self.costs_labels = []
         self.costs_labels.append(self.might_upgrade_cost)
         self.costs_labels.append(self.cunning_upgrade_cost)
         self.costs_labels.append(self.psyche_upgrade_cost)
         self.costs_labels.append(self.lore_upgrade_cost)
+
+        # init upgrades cost
+        for i in range(4):
+            self.train(i)
+        self.messages.clear()
 
         # Status
         self.status_label = tk.Label(self, text="Idle",
@@ -293,14 +298,31 @@ class GameView(tk.Frame):
 
     def __init_buttons(self):
         # Buttons
-        self.work_btn = tk.Button(self, text="Work", command=lambda: self.button_click(
-            "Work")).grid(row=0, column=2, sticky="nwse", rowspan=2)
+        tk.Button(self, text="Work", command=lambda: self.button_click("Work", 0)).grid(row=4, column=3, sticky="nwse")
+        tk.Button(self, text="Work", command=lambda: self.button_click("Work", 1)).grid(row=5, column=3, sticky="nwse")
+        tk.Button(self, text="Work", command=lambda: self.button_click("Work", 2)).grid(row=6, column=3, sticky="nwse")
+        tk.Button(self, text="Work", command=lambda: self.button_click("Work", 3)).grid(row=7, column=3, sticky="nwse")
+
+        # self.work_btn = tk.Button(self, text="Work", command=lambda: self.button_click(
+        #     "Work", 0)).grid(row=3, column=4, sticky="nwse")
+        # self.work_btn = tk.Button(self, text="Work", command=lambda: self.button_click(
+        #     "Work", 0)).grid(row=3, column=4, sticky="nwse")
+
         self.rest_btn = tk.Button(self, text="      Rest      ", command=lambda: self.button_click(
             "Rest")).grid(row=0, column=4, sticky="nwse", rowspan=2)
         # Equipment
         self.equipment_btn = tk.Button(self, text="Equipment",
                                        command=lambda: self.controller.frames["EquipmentView"].show_frame()) \
-            .grid(row=3, column=2, sticky="nwse", padx=2, pady=2)
+            .grid(row=0, column=2, sticky="nwse", padx=2, pady=2, rowspan=2)
+
+        self.upgrade_work = tk.Button(self, text="Upgrade Work\n(100 gold)",
+                                       command=lambda: self.upgrade_action("Work"))
+        self.upgrade_work.grid(row=2, column=2, sticky="nwse", padx=2, pady=2, rowspan=2)
+
+        self.upgrade_rest = tk.Button(self, text="Upgrade Rest\n(100 gold)",
+                                       command=lambda: self.upgrade_action("Rest"))
+        self.upgrade_rest.grid(row=2, column=4, sticky="nwse", padx=2, pady=2, rowspan=2)
+
         # Upgrade Buttons
         self.might_upgrade_btn = tk.Button(self, text="Train", command=lambda: self.train(0)) \
             .grid(row=4, column=2, sticky="nwse", padx=2, pady=2)
@@ -391,14 +413,17 @@ class GameView(tk.Frame):
         # self.set_challenges()
 
     def train(self, index):
+        attr = ["Might", "Cunning", "Psyche", "Lore"]
         bohater = self.controller.hero
-        cost = decimal.Decimal(2) ** (bohater.train_active[index].val - 1)
-        if cost < bohater.riches:
-            bohater.train(index)
-            bohater.riches.val -= cost
+        succ, cost, next_cost, value = bohater.train(index)
+        self.costs_labels[index].config(text="({})".format(next_cost))
+        if succ:
+            self.messages.add_message("Training successful\nYou gain {} {}.\n-{} {} exp.".format(
+                large_number_format(value), attr[index], cost, attr[index]
+            ), succ=True)
+        else:
+            self.messages.add_message("You don't have\nenough exp.")
 
-            self.costs_labels[index].config(text=large_number_format(
-                decimal.Decimal(2) ** (bohater.train_active[index].val - 1)))
 
     def generate_adventures(self, level):
         try:
@@ -423,12 +448,11 @@ class GameView(tk.Frame):
                                                              self.adventures[i].get_remaining_challenges(),
                                                              *cost)
 
-    def button_click(self, name):
+    def button_click(self, name, btn_id=-1):
 
-        bohater = self.controller.hero
         if name == "Work":
             if not self.resting and not self.working:
-                self.active_work = action.Work(1, self.controller.hero, adventure=self.active_adventure)
+                self.active_work = action.Work(self.controller.hero, btn_id)
 
                 self.working = True
                 self.status_label['text'] = 'Working'
@@ -509,6 +533,13 @@ class GameView(tk.Frame):
         if self.active_challenge is not None or self.in_challenge:
             return
 
+        if self.working:
+            self.messages.add_message("You cant't start\n challenge while\nworking.")
+            return
+
+        if self.resting:
+            self.messages.add_message("You cant't start\n challenge while\nresting.")
+            return
 
         bohater = self.controller.hero
 
@@ -518,24 +549,43 @@ class GameView(tk.Frame):
             self.status_label['text'] = 'In Challenge'
             self.challenge_progressbar['maximum'] = int(challenge.progress_maximum)
             self.active_challenge = challenge
+        else:
+            self.messages.add_message("You don't heaven\n enought attributes\nto start this challenge.")
 
-    def claim_reward(self, object):
+    def claim_reward(self, quest):
         bohater = self.controller.hero
 
         text = "{} completed\nexp: ({}, {}, {}, {})\nGold: {}"
         exps = []
         for i in range(4):
-            bohater.active_exp[i].val += object.reward.waluta.exp[i]
-            exps.append( large_number_format(object.reward.waluta.exp[i]))
+            bohater.active_exp[i].val += quest.reward.waluta.exp[i]
+            exps.append(large_number_format(quest.reward.waluta.exp[i]))
 
-        bohater.riches += object.reward.waluta.riches
-        bohater.treasures += object.reward.waluta.treasures
-        self.messages.add_message(text.format(object.__class__.__name__, *exps,
-                                              large_number_format(object.reward.waluta.riches)), succ=True)
+        bohater.riches += quest.reward.waluta.riches
+        bohater.treasures += quest.reward.waluta.treasures
+        self.messages.add_message(text.format(quest.__class__.__name__, *exps,
+                                              large_number_format(quest.reward.waluta.riches)), succ=True)
 
-        for item in object.reward.getItems():
+        for item in quest.reward.getItems():
             self.messages.add_message("You found Item\n{}\n{}".format(item.type, item.name), succ=True)
             bohater.eq.addItem(item)
+
+    def upgrade_action(self, action_name):
+        bohater = self.controller.hero
+        if action_name == "Work":
+            succ, cost, next_cost, level = action.Work(bohater).upgrade(bohater)
+            print(action.Work.level)
+            if succ:
+                self.upgrade_work.config(text="Upgrade Work\n({} gold)".format(next_cost))
+        elif action_name == "Rest":
+            succ, cost, next_cost, level = action.Rest().upgrade(bohater)
+            if succ:
+                self.upgrade_rest.config(text="Upgrade Rest\n({} gold)".format(next_cost))
+
+        if succ:
+            self.messages.add_message("{} upgraded\nto level {}.\n-{} gold.".format(action_name, level, cost), succ=True)
+        else:
+            self.messages.add_message("You need {} gold\nto upgrade {}.".format(cost, action_name))
 
 
     def start(self):
@@ -559,9 +609,15 @@ class GameView(tk.Frame):
             rest = action.Rest()
             rest.update(self.controller.hero, d_time)
         if self.working:
-            if self.active_work.update(self.controller.hero, d_time, self.active_adventure):
+            ret = self.active_work.update(self.controller.hero, d_time, self.active_adventure);
+            if ret != 0:
                 self.active_work = None
                 self.working = False
+                if ret == 1:
+                    self.messages.add_message("Work Ended", succ=True)
+                else:
+                    self.messages.add_message("Not enough stamina for end work.")
+
         if self.in_challenge:
             if not self.working and not self.resting:
                 if self.in_challenge:
