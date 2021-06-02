@@ -1,6 +1,8 @@
 from data_types import Currency, PassiveAttribute
 from decimal import Decimal
 
+active_names = ["Might", "Cunning", "Psyche", "Lore"]
+passive_names = ["Stamina", "Health", "Ploy", "Spirit", "Clarity"]
 
 class Hero:
     def __init__(self, name):
@@ -32,6 +34,9 @@ class Hero:
         # 4-Clarity
         self.passive = [PassiveAttribute(20, 'Stamina'), PassiveAttribute(20, 'Health'), PassiveAttribute(20, 'Ploy'),
                         PassiveAttribute(20, 'Spirit'), PassiveAttribute(20, 'Clarity')]
+
+        self.passive_max = [PassiveAttribute(100, 'Stamina'), PassiveAttribute(100, 'Health'), PassiveAttribute(100, 'Ploy'),
+                            PassiveAttribute(100, 'Spirit'), PassiveAttribute(100, 'Clarity')]
         # umiejetnosci
         self.skills = None  # jakies inne umiejetnosci, jeszcze nie utworzony typ.
         # ekwipunek
@@ -139,24 +144,37 @@ class Hero:
         del self.eq.all_items[item_id]
         return [name, value]
 
-    def getNextUpgradeCost(self, attribute_id):
+    def getNextUpgradeCost(self, attribute_id, active=True):
         cost = Decimal(100)  # todo
         return cost
 
-    def train(self, attribute_id):
-        value = Decimal(0.5)
-        cost = self.getNextUpgradeCost(attribute_id)
+    def train(self, attribute_id, active=True):
+        value = None
         success = False
+        cost = None
 
-        if cost < self.active_exp[attribute_id]:
-            self.train_active[attribute_id] += 1
-            self.active_exp[attribute_id].val -= cost
+        if active:
+            value = Decimal(0.5)
+            cost = self.getNextUpgradeCost(attribute_id)
+            if cost < self.active_exp[attribute_id]:
+                self.train_active[attribute_id] += 1
+                self.active_exp[attribute_id].val -= cost
 
-            self.active[attribute_id].val += value
-            success = True
+                self.active[attribute_id].val += value
+                success = True
+        else:
+            value = Decimal(20)
+            cost = Decimal(100)
 
-        return success, cost, self.getNextUpgradeCost(attribute_id), value
+            if [cost < self.active_exp[i] for i in range(4)] == [True for i in range(4)]:
+                for i in range(4):
+                    self.active_exp[i].val -= cost
 
+                self.passive_max[attribute_id].val += value
+                success = True
+                value = self.passive_max[attribute_id].val
+
+        return success, cost, self.getNextUpgradeCost(attribute_id, False), value
 
 class Item:
     def __init__(self, name, type, minimum=[0, 0, 0, 0], m=0, c=0, p=0, l=0, value=0):
