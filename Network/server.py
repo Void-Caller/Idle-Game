@@ -50,7 +50,7 @@ class PacketHandler:
             if user is not None:
                 print("DEBUG: received: ", login.encode())
                 print("DEBUG: received: ", password.encode())
-                print("DEBUG: Hashed Password ->", bcrypt.checkpw(password.encode(), user.password.encode()) )
+                print("DEBUG: Hashed Password ->", bcrypt.checkpw(password.encode(), user.password.encode()))
                 print("DEBUG: cmp ->", user.password)
 
                 if bcrypt.checkpw(password.encode(), user.password.encode()):
@@ -96,7 +96,7 @@ class PacketHandler:
 
             if result_login:
                 outgoing_packet.add(2)
-                return outgoing_packet;
+                return outgoing_packet
 
             if result_email:
                 outgoing_packet.add(3)
@@ -115,7 +115,7 @@ class PacketHandler:
         elif type == PacketType.GET_STATS:
             outgoing_packet = Packet(PacketType.GET_STATS)
             user = self.server.get_user(client_ip, client_port)
-            if (user == None):
+            if user is None:
                 return outgoing_packet
 
             userCurrency = self.userCurrencyRepository.findOneBy({"user_id": user[0].id})
@@ -125,102 +125,127 @@ class PacketHandler:
             outgoing_packet.add(Decimal(userCurrency.cunning))
             outgoing_packet.add(Decimal(userCurrency.psyche))
             outgoing_packet.add(Decimal(userCurrency.lore))
+            outgoing_packet.add(Decimal(userCurrency.might_exp))
+            outgoing_packet.add(Decimal(userCurrency.cunning_exp))
+            outgoing_packet.add(Decimal(userCurrency.psyche_exp))
+            outgoing_packet.add(Decimal(userCurrency.lore_exp))
             outgoing_packet.add(Decimal(userCurrency.stamina))
             outgoing_packet.add(Decimal(userCurrency.health))
             outgoing_packet.add(Decimal(userCurrency.ploy))
             outgoing_packet.add(Decimal(userCurrency.spirit))
             outgoing_packet.add(Decimal(userCurrency.clarity))
+            outgoing_packet.add(Decimal(userCurrency.stamina_max))
+            outgoing_packet.add(Decimal(userCurrency.health_max))
+            outgoing_packet.add(Decimal(userCurrency.ploy_max))
+            outgoing_packet.add(Decimal(userCurrency.spirit_max))
+            outgoing_packet.add(Decimal(userCurrency.clarity_max))
+            outgoing_packet.add(Decimal(userCurrency.work_level))
+            outgoing_packet.add(Decimal(userCurrency.rest_level))
 
             return outgoing_packet
 
         elif type == PacketType.GET_ITEMS:
             outgoing_packet = Packet(PacketType.GET_ITEMS)
             user = self.server.get_user(client_ip, client_port)
-            if (user == None):
+            if user is None:
                 return outgoing_packet
 
-            userEquipment = self.userEquipmentRepository.findBy({"user_id": user[0].id})
-            if userEquipment == None:
+            items = self.itemRepository.findBy({"user_id": user[0].id})
+            if items is None:
                 outgoing_packet.add(0)
                 return outgoing_packet
 
-            outgoing_packet.add(int(len(userEquipment)))
+            outgoing_packet.add(int(len(items)))
 
-            for item in userEquipment:
-                outgoing_packet.add(int(item.item_id))
+            for item in items:
+                outgoing_packet.add(item.name)
+                outgoing_packet.add(item.type)
+                outgoing_packet.add(item.req_might)
+                outgoing_packet.add(item.req_cunning)
+                outgoing_packet.add(item.req_psyche)
+                outgoing_packet.add(item.req_lore)
+                outgoing_packet.add(item.might)
+                outgoing_packet.add(item.cunning)
+                outgoing_packet.add(item.psyche)
+                outgoing_packet.add(item.lore)
+                outgoing_packet.add(item.value)
                 outgoing_packet.add(item.equipped)
-
-            return outgoing_packet
-
-        elif type == PacketType.GET_ITEM_INFO:
-            outgoing_packet = Packet(PacketType.GET_ITEM_INFO)
-            item_id = packet.get()
-
-            item = self.itemRepository.findOneBy({"id": item_id})
-            if item == None:
-                return outgoing_packet
-
-            outgoing_packet.add(item.name)
-            outgoing_packet.add(item.type)
-            outgoing_packet.add(Decimal(item.req_might))
-            outgoing_packet.add(Decimal(item.req_cunning))
-            outgoing_packet.add(Decimal(item.req_psyche))
-            outgoing_packet.add(Decimal(item.req_lore))
-            outgoing_packet.add(Decimal(item.might))
-            outgoing_packet.add(Decimal(item.cunning))
-            outgoing_packet.add(Decimal(item.psyche))
-            outgoing_packet.add(Decimal(item.lore))
-            print("itemlore", item.lore)
 
             return outgoing_packet
 
         elif type == PacketType.SAVE_STATS:
             outgoing_packet = Packet(PacketType.SAVE_STATS)
             user = self.server.get_user(client_ip, client_port)
-            if (user == None):
+            if user is None:
+                print("xD")
                 outgoing_packet.add(0)
                 return outgoing_packet
 
             userCurrency = UserCurrency()
             userCurrency.user_id = user[0].id
+            userCurrency.gold = str(packet.get())
+            userCurrency.treasure = str(packet.get())
             userCurrency.might = str(packet.get())
             userCurrency.cunning = str(packet.get())
             userCurrency.psyche = str(packet.get())
             userCurrency.lore = str(packet.get())
-            userCurrency.gold = str(packet.get())
-            userCurrency.treasure = str(packet.get())
+            userCurrency.might_exp = str(packet.get())
+            userCurrency.cunning_exp = str(packet.get())
+            userCurrency.psyche_exp = str(packet.get())
+            userCurrency.lore_exp = str(packet.get())
             userCurrency.stamina = str(packet.get())
             userCurrency.health = str(packet.get())
             userCurrency.ploy = str(packet.get())
             userCurrency.spirit = str(packet.get())
             userCurrency.clarity = str(packet.get())
+            userCurrency.stamina_max = str(packet.get())
+            userCurrency.health_max = str(packet.get())
+            userCurrency.ploy_max = str(packet.get())
+            userCurrency.spirit_max = str(packet.get())
+            userCurrency.clarity_max = str(packet.get())
+            userCurrency.work_level = str(packet.get())
+            userCurrency.rest_level = str(packet.get())
 
-            if self.userCurrencyRepository.add(userCurrency):
+            if self.userCurrencyRepository.add(userCurrency, {"user_id": user[0].id}):
                 outgoing_packet.add(1)
+                print("ok")
             else:
                 outgoing_packet.add(0)
+                print("nie ok")
 
             return outgoing_packet
 
         elif type == PacketType.SAVE_ITEMS:
             outgoing_packet = Packet(PacketType.SAVE_ITEMS)
             user = self.server.get_user(client_ip, client_port)
-            if (user == None):
+            if user is None:
                 return outgoing_packet
 
             n = packet.get()
+            print("N : ", n)
 
-            if self.userEquipmentRepository.delete_old_items(user[0].id):  # TODO
+            if self.itemRepository.delete_old_items(user[0].id):  # TODO
                 outgoing_packet.add(0)
                 return outgoing_packet
 
             for i in range(n):
-                userEquipment = UserEquipment()
-                userEquipment.item_id = int(packet.get())
-                userEquipment.user_id = user[0].id
-                userEquipment.equipped = int(packet.get())
+                item = Item()
+                item.user_id = user[0].id
+                item.name = packet.get()
+                item.type = packet.get()
+                item.req_might = packet.get()
+                item.req_cunning = packet.get()
+                item.req_psyche = packet.get()
+                item.req_lore = packet.get()
+                item.might = packet.get()
+                item.cunning = packet.get()
+                item.psyche = packet.get()
+                item.lore = packet.get()
+                item.value = packet.get()
+                item.equipped = int(packet.get())
 
-                if not self.userEquipmentRepository.add(userEquipment):
+                if not self.itemRepository.add(item):
+                    print("fail")
                     outgoing_packet.add(0)
                     return outgoing_packet
 
@@ -270,6 +295,7 @@ class Server:
             if user[1] == ip and user[2] == port:
                 return user
         return None
+
 
 if __name__ == "__main__":
     s = Server()

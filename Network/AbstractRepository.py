@@ -65,7 +65,13 @@ class AbstractRepository:
         result = self.cursor.fetchall()
         return result
 
-    def _add(self, object):
+    def _add(self, object, replace=None):
+
+        if replace:
+            query = "DELETE FROM {} WHERE {} = {}".format(self.name, list(replace.keys())[0], replace[list(replace.keys())[0]])
+            print(query)
+            self.cursor.execute(query)
+
         arr = object.__dict__
         keys = list(arr.keys())
         values = list(arr.values())
@@ -115,6 +121,8 @@ class AbstractRepository:
         try:
             #print ("DEBUG:", self.querry)
             self.cursor.execute(self.querry)
+            print(self.querry)
+            print ("success.")
         except Exception as e:
             print(self.querry)
             print ("failed.")
@@ -124,6 +132,7 @@ class AbstractRepository:
         query = "SELECT last_insert_rowid()"
         self.cursor.execute(query)
         result = self.cursor.fetchall()
+        print("result", result[0][0])
 
         return result[0][0]
 

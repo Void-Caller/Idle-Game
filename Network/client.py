@@ -1,6 +1,9 @@
 import threading
 import time
 
+import action
+import data_types
+import hero
 from .UdpSocket import UdpSocket
 from .packet import Packet
 from .packetTypes import PacketType
@@ -198,11 +201,22 @@ class Client(metaclass=ClientMeta):
             'cunning': packet.get(),
             'psyche': packet.get(),
             'lore': packet.get(),
+            'might_exp': packet.get(),
+            'cunning_exp': packet.get(),
+            'psyche_exp': packet.get(),
+            'lore_exp': packet.get(),
             'stamina': packet.get(),
             'health': packet.get(),
             'ploy': packet.get(),
             'spirit': packet.get(),
-            'clarity': packet.get()
+            'clarity': packet.get(),
+            'stamina_max': packet.get(),
+            'health_max': packet.get(),
+            'ploy_max': packet.get(),
+            'spirit_max': packet.get(),
+            'clarity_max': packet.get(),
+            'work_level': packet.get(),
+            'rest_level': packet.get()
         }
 
     def get_items(self):
@@ -225,55 +239,25 @@ class Client(metaclass=ClientMeta):
         packet = self.__listen(PacketType.GET_ITEMS)
         items = []
         n = packet.get()
-        print("N:", n)
 
         for i in range(n):
-            item_id = packet.get()
-            equipped = packet.get()
-            items.append((item_id, equipped))
-
+            items.append({
+                "name": packet.get(),
+                "type": packet.get(),
+                "req_might": packet.get(),
+                "req_cunning": packet.get(),
+                "req_psyche": packet.get(),
+                "req_lore": packet.get(),
+                "might": packet.get(),
+                "cunning": packet.get(),
+                "psyche": packet.get(),
+                "lore": packet.get(),
+                "value": packet.get(),
+                "equipped": packet.get()
+            })
         return items
 
-    def get_item_info(self, item_id):
-        """
-            Get Item Details
-            [Must be logged in]
-            Parameters:
-                int item_id
-            Returns: dict
-                str 'name'
-                str 'type'
-                Decimal 'req_might'
-                Decimal 'req_cunning'
-                Decimal 'req_psyche'
-                Decimal 'req_lore'
-                Decimal 'might'
-                Decimal 'cunning'
-                Decimal 'psyche'
-                Decimal 'lore'
-        """
-        packet = Packet(PacketType.GET_ITEM_INFO)
-        packet.add(item_id)
-        self.send(packet)
-
-        packet = self.__listen(PacketType.GET_ITEM_INFO)
-
-        return {
-            'name': packet.get(),
-            'type': packet.get(),
-            'req_might': packet.get(),
-            'req_cunning': packet.get(),
-            'req_psyche': packet.get(),
-            'req_lore': packet.get(),
-            'might': packet.get(),
-            'cunning': packet.get(),
-            'psyche': packet.get(),
-            'lore': packet.get()
-        }
-
-        return items
-
-    def save_stats(self, stats):
+    def save_stats(self, bohater):
         """
             Save Stats to Database
             Parameters:
@@ -295,30 +279,28 @@ class Client(metaclass=ClientMeta):
                     '1' - success
         """
         packet = Packet(PacketType.SAVE_STATS)
-        packet.add(stats['might'])
-        packet.add(stats['cunning'])
-        packet.add(stats['psyche'])
-        packet.add(stats['lore'])
-        packet.add(stats['gold'])
-        packet.add(stats['treasure'])
-        packet.add(stats['stamina'])
-        packet.add(stats['health'])
-        packet.add(stats['ploy'])
-        packet.add(stats['spirit'])
-        packet.add(stats['clarity'])
+        packet.add(bohater.riches.val)
+        packet.add(bohater.treasures.val)
+        [packet.add(bohater.active[i].val) for i in range(4)]
+        if isinstance(bohater.active_exp[0].val, data_types.Currency):
+            [packet.add(bohater.active_exp[i].val.val) for i in range(4)]
+        else:
+            [packet.add(bohater.active_exp[i].val) for i in range(4)]
+
+        [packet.add(bohater.passive[i].val) for i in range(5)]
+        [packet.add(bohater.passive[i].max) for i in range(5)]
+        packet.add(action.Work.level)
+        packet.add(action.Rest.level)
         self.send(packet)
 
         packet = self.__listen(PacketType.SAVE_STATS)
         return packet.get()
 
-    def save_items(self, items):
+    def save_items(self, bohater):
         """
             Save Stats to Database
             Parameters:
-                array
-                    dict
-                        int : item_id
-                        int : equipped
+                bohater
             Returns:
                 int
                     '0' - failed
@@ -326,11 +308,19 @@ class Client(metaclass=ClientMeta):
         """
         packet = Packet(PacketType.SAVE_ITEMS)
 
-        packet.add(len(items))
+        items_count = len(bohater.eq.all_items)
+        for item in bohater.set:
+            if item is not None:
+                items_count += 1
 
-        for item in items:
-            packet.add(item['item_id'])
-            packet.add(item['equipped'])
+        print("items_count:: ", items_count)
+        packet.add(items_count)
+        for item in bohater.set:
+            if item is not None:
+                packet_item(packet, item, equipped=True)
+
+        for item in bohater.eq.all_items:
+            packet_item(packet, item)
 
         self.send(packet)
 
@@ -352,137 +342,16 @@ class Client(metaclass=ClientMeta):
             'clarity': packet.get()
         }
 
-    def get_items(self):
-        """
-            Get User Items
-            [Must be logged in]
-            Parameters:
-                None
-            Returns
-                array [ tuple ]
-                int 'n'
-                    (n times)
-                    int 'item_id'
-                    bool 'equipped'
-        """
-        packet = Packet(PacketType.GET_ITEMS)
 
-        self.send(packet)
-
-        packet = self.__listen(PacketType.GET_ITEMS)
-        items = []
-        n = packet.get()
-        print("N:", n)
-
-        for i in range(n):
-            item_id = packet.get()
-            equipped = packet.get()
-            items.append((item_id, equipped))
-
-        return items
-
-    def get_item_info(self, item_id):
-        """
-            Get Item Details
-            [Must be logged in]
-            Parameters:
-                int item_id
-            Returns: dict
-                str 'name'
-                str 'type'
-                Decimal 'req_might'
-                Decimal 'req_cunning'
-                Decimal 'req_psyche'
-                Decimal 'req_lore'
-                Decimal 'might'
-                Decimal 'cunning'
-                Decimal 'psyche'
-                Decimal 'lore'
-        """
-        packet = Packet(PacketType.GET_ITEM_INFO)
-        packet.add(item_id)
-        self.send(packet)
-
-        packet = self.__listen(PacketType.GET_ITEM_INFO)
-
-        return {
-            'name': packet.get(),
-            'type': packet.get(),
-            'req_might': packet.get(),
-            'req_cunning': packet.get(),
-            'req_psyche': packet.get(),
-            'req_lore': packet.get(),
-            'might': packet.get(),
-            'cunning': packet.get(),
-            'psyche': packet.get(),
-            'lore': packet.get()
-        }
-
-        return items
-
-    def save_stats(self, stats):
-        """
-            Save Stats to Database
-            Parameters:
-                dict:
-                    Decimal 'might'
-                    Decimal 'cunning'
-                    Decimal 'psyche'
-                    Decimal 'lore'
-                    Decimal `gold`
-                    Decimal `treasure`
-                    Decimal `stamina`
-                    Decimal `health`
-                    Decimal `ploy`
-                    Decimal `spirit`
-                    Decimal `clarity`
-            Returns:
-                int
-                    '0' - failed
-                    '1' - success
-        """
-        packet = Packet(PacketType.SAVE_STATS)
-        packet.add(stats['might'])
-        packet.add(stats['cunning'])
-        packet.add(stats['psyche'])
-        packet.add(stats['lore'])
-        packet.add(stats['gold'])
-        packet.add(stats['treasure'])
-        packet.add(stats['stamina'])
-        packet.add(stats['health'])
-        packet.add(stats['ploy'])
-        packet.add(stats['spirit'])
-        packet.add(stats['clarity'])
-        self.send(packet)
-
-        packet = self.__listen(PacketType.SAVE_STATS)
-        return packet.get()
-
-    def save_items(self, items):
-        """
-            Save Stats to Database
-            Parameters:
-                array
-                    dict
-                        int : item_id
-                        int : equipped
-            Returns:
-                int
-                    '0' - failed
-                    '1' - success
-        """
-        packet = Packet(PacketType.SAVE_ITEMS)
-
-        packet.add(len(items))
-
-        for item in items:
-            packet.add(item['item_id'])
-            packet.add(item['equipped'])
-
-        self.send(packet)
-
-        packet = self.__listen(PacketType.SAVE_ITEMS)
-        return packet.get()
+def packet_item(packet, item, equipped=False):
+    packet.add(item.name)
+    packet.add(item.type)
+    for i in range(4):
+        packet.add(item.min_attr[i])
+    for i in range(4):
+        packet.add(item.item_attr[i].val)
+    packet.add(item.value)
+    packet.add(int(equipped))
 
 
 if __name__ == "__main__":
