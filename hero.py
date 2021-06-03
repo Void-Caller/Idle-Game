@@ -168,9 +168,9 @@ class Hero:
                 for i in range(4):
                     self.active_exp[i].val -= cost
 
-                self.passive_max[attribute_id].val += value
+                self.passive[attribute_id].max += value
                 success = True
-                value = self.passive_max[attribute_id].val
+                value = self.passive[attribute_id].max
 
         return success, cost, self.getNextUpgradeCost(attribute_id, False), value
 

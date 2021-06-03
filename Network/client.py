@@ -1,6 +1,9 @@
 import threading
 import time
 
+import action
+import data_types
+import hero
 from .UdpSocket import UdpSocket
 from .packet import Packet
 from .packetTypes import PacketType
@@ -254,7 +257,7 @@ class Client(metaclass=ClientMeta):
             })
         return items
 
-    def save_stats(self, stats):
+    def save_stats(self, bohater):
         """
             Save Stats to Database
             Parameters:
@@ -276,34 +279,28 @@ class Client(metaclass=ClientMeta):
                     '1' - success
         """
         packet = Packet(PacketType.SAVE_STATS)
-        packet.add(stats['gold'])
-        packet.add(stats['treasure'])
-        packet.add(stats['might'])
-        packet.add(stats['cunning'])
-        packet.add(stats['psyche'])
-        packet.add(stats['lore'])
-        packet.add(stats['might_exp'])
-        packet.add(stats['cunning_exp'])
-        packet.add(stats['psyche_exp'])
-        packet.add(stats['lore_exp'])
-        packet.add(stats['stamina'])
-        packet.add(stats['health'])
-        packet.add(stats['ploy'])
-        packet.add(stats['spirit'])
-        packet.add(stats['clarity'])
+        packet.add(bohater.riches.val)
+        packet.add(bohater.treasures.val)
+        [packet.add(bohater.active[i].val) for i in range(4)]
+        if isinstance(bohater.active_exp[0].val, data_types.Currency):
+            [packet.add(bohater.active_exp[i].val.val) for i in range(4)]
+        else:
+            [packet.add(bohater.active_exp[i].val) for i in range(4)]
+
+        [packet.add(bohater.passive[i].val) for i in range(5)]
+        [packet.add(bohater.passive[i].max) for i in range(5)]
+        packet.add(action.Work.level)
+        packet.add(action.Rest.level)
         self.send(packet)
 
         packet = self.__listen(PacketType.SAVE_STATS)
         return packet.get()
 
-    def save_items(self, items):
+    def save_items(self, bohater):
         """
             Save Stats to Database
             Parameters:
-                array
-                    dict
-                        int : item_id
-                        int : equipped
+                bohater
             Returns:
                 int
                     '0' - failed
@@ -311,11 +308,19 @@ class Client(metaclass=ClientMeta):
         """
         packet = Packet(PacketType.SAVE_ITEMS)
 
-        packet.add(len(items))
+        items_count = len(bohater.eq.all_items)
+        for item in bohater.set:
+            if item is not None:
+                items_count += 1
 
-        for item in items:
-            packet.add(item['item_id'])
-            packet.add(item['equipped'])
+        print("items_count:: ", items_count)
+        packet.add(items_count)
+        for item in bohater.set:
+            if item is not None:
+                packet_item(packet, item, equipped=True)
+
+        for item in bohater.eq.all_items:
+            packet_item(packet, item)
 
         self.send(packet)
 
@@ -336,6 +341,17 @@ class Client(metaclass=ClientMeta):
             'spirit': packet.get(),
             'clarity': packet.get()
         }
+
+
+def packet_item(packet, item, equipped=False):
+    packet.add(item.name)
+    packet.add(item.type)
+    for i in range(4):
+        packet.add(item.min_attr[i])
+    for i in range(4):
+        packet.add(item.item_attr[i].val)
+    packet.add(item.value)
+    packet.add(int(equipped))
 
 
 if __name__ == "__main__":

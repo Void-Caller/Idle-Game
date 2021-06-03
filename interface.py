@@ -495,9 +495,6 @@ class GameView(tk.Frame):
                 self.messages.add_message("You can't Rest\nwhile in challenge.")
 
     def adv_start(self, type, id):
-
-        print(self.controller.hero)
-        print(action.Work.level)
         # Hide Adventures
         self.adventure_entry.grid_remove()
         self.adventure_label.grid_remove()
@@ -570,6 +567,9 @@ class GameView(tk.Frame):
             return
 
         bohater = self.controller.hero
+
+        if self.active_adventure.challenge_index > len(self.active_adventure.challenges):
+            self.adv_end()
 
         challenge = self.active_adventure.challenges[self.active_adventure.challenge_index]
         if challenge.can_hero_start(bohater):
@@ -968,7 +968,6 @@ def load_stats(bohater):
 
 def load_items(bohater):
     cl = Client().get_instance()
-    print(cl.get_items())
     for item in cl.get_items():
         new_item = hero.Item(item['name'], item['type'],
                              minimum=[
@@ -995,6 +994,7 @@ def login(view, controller, username, password):
     error_lb = tk.Label(
         view, text='Invalid username or password', font=controller.main_font)
     if return_value:
+        controller.hero = hero.Hero("Name")
         load_stats(controller.hero)
         load_items(controller.hero)
         switch_to(view, controller, "GameView")
@@ -1012,10 +1012,8 @@ def register(view, controller, username, password, email):
         error_lb.grid(row=0, column=2, sticky='ew')
         return
     elif return_value == 2:
-        print("user exist")
         error_lb['text'] = 'Username already exists.'
     elif return_value == 3:
-        print("email exist")
         error_lb['text'] = 'Email already exists.'
 
     error_lb.grid(row=9, column=2, sticky='ew')
@@ -1023,15 +1021,15 @@ def register(view, controller, username, password, email):
 
 def logout(view, controller):
     cl = Client().get_instance()
-    cl.logout()
     save_data(controller.hero)
+    cl.logout()
     switch_to(view, controller, "MenuView")
 
 
 def save_data(bohater):
     cl = Client().get_instance()
-    cl.save_stats()
-    cl.save_items()
+    cl.save_stats(bohater)
+    cl.save_items(bohater)
 
 
 def switch_to(view, controller, where):

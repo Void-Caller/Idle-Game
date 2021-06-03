@@ -116,9 +116,9 @@ class UserCurrencyRepository(AbstractRepository):
             return result[0]
         return None
 
-    def add(self, object):
+    def add(self, object, replace=None):
         if object.__class__.__name__ == "UserCurrency":
-            return self._add(object)
+            return self._add(object, replace)
         else:
             raise TypeError
 

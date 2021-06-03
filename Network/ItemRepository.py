@@ -87,9 +87,18 @@ class ItemRepository(AbstractRepository):
 
     def add(self, object):
         if object.__class__.__name__ == "Item":
-            self._add(object)
+            return self._add(object)
         else:
             raise TypeError
+
+    def delete_old_items(self, user_id):
+        querry = "DELETE FROM {} WHERE `user_id` = {}".format(self.name, user_id)
+        try:
+            self.cursor.execute(querry)
+        except Exception as e:
+            print(querry)
+            print ("failed.")
+            print(e)
 
 
 if __name__ == "__main__":
