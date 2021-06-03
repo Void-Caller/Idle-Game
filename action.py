@@ -11,6 +11,14 @@ def RestException(Exception):
     pass
 
 
+def set_work_level(level):
+    Work.level = Decimal(level)
+
+
+def set_rest_level(level):
+    Rest.level = Decimal(level)
+
+
 class Work:
     # czynność trwająca ileś sekund; zużywa atrybuty pasywne
     level = Decimal(1)
@@ -124,7 +132,7 @@ class Rest:
             else:
                 bohater.passive[i].val += self.passive[i].val * Rest.level * Decimal(d_time)
 
-        ret = [True if bohater.passive[i].val == Decimal(100) else False for i in range(5)]
+        ret = [True if bohater.passive[i].val == bohater.passive[i].max else False for i in range(5)]
         return ret ==[True for i in range(5)]
 
     def upgrade(self, bohater):

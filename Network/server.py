@@ -96,7 +96,7 @@ class PacketHandler:
 
             if result_login:
                 outgoing_packet.add(2)
-                return outgoing_packet;
+                return outgoing_packet
 
             if result_email:
                 outgoing_packet.add(3)
@@ -125,52 +125,51 @@ class PacketHandler:
             outgoing_packet.add(Decimal(userCurrency.cunning))
             outgoing_packet.add(Decimal(userCurrency.psyche))
             outgoing_packet.add(Decimal(userCurrency.lore))
+            outgoing_packet.add(Decimal(userCurrency.might_exp))
+            outgoing_packet.add(Decimal(userCurrency.cunning_exp))
+            outgoing_packet.add(Decimal(userCurrency.psyche_exp))
+            outgoing_packet.add(Decimal(userCurrency.lore_exp))
             outgoing_packet.add(Decimal(userCurrency.stamina))
             outgoing_packet.add(Decimal(userCurrency.health))
             outgoing_packet.add(Decimal(userCurrency.ploy))
             outgoing_packet.add(Decimal(userCurrency.spirit))
             outgoing_packet.add(Decimal(userCurrency.clarity))
+            outgoing_packet.add(Decimal(userCurrency.stamina_max))
+            outgoing_packet.add(Decimal(userCurrency.health_max))
+            outgoing_packet.add(Decimal(userCurrency.ploy_max))
+            outgoing_packet.add(Decimal(userCurrency.spirit_max))
+            outgoing_packet.add(Decimal(userCurrency.clarity_max))
+            outgoing_packet.add(Decimal(userCurrency.work_level))
+            outgoing_packet.add(Decimal(userCurrency.rest_level))
 
             return outgoing_packet
 
         elif type == PacketType.GET_ITEMS:
             outgoing_packet = Packet(PacketType.GET_ITEMS)
             user = self.server.get_user(client_ip, client_port)
-            if (user == None):
+            if user is None:
                 return outgoing_packet
 
-            userEquipment = self.userEquipmentRepository.findBy({"user_id": user[0].id})
-            if userEquipment == None:
+            items = self.itemRepository.findBy({"user_id": user[0].id})
+            if items is None:
                 outgoing_packet.add(0)
                 return outgoing_packet
 
-            outgoing_packet.add(int(len(userEquipment)))
+            outgoing_packet.add(int(len(items)))
 
-            for item in userEquipment:
-                outgoing_packet.add(int(item.item_id))
+            for item in items:
+                outgoing_packet.add(item.name)
+                outgoing_packet.add(item.type)
+                outgoing_packet.add(item.req_might)
+                outgoing_packet.add(item.req_cunning)
+                outgoing_packet.add(item.req_psyche)
+                outgoing_packet.add(item.req_lore)
+                outgoing_packet.add(item.might)
+                outgoing_packet.add(item.cunning)
+                outgoing_packet.add(item.psyche)
+                outgoing_packet.add(item.lore)
+                outgoing_packet.add(item.value)
                 outgoing_packet.add(item.equipped)
-
-            return outgoing_packet
-
-        elif type == PacketType.GET_ITEM_INFO:
-            outgoing_packet = Packet(PacketType.GET_ITEM_INFO)
-            item_id = packet.get()
-
-            item = self.itemRepository.findOneBy({"id": item_id})
-            if item == None:
-                return outgoing_packet
-
-            outgoing_packet.add(item.name)
-            outgoing_packet.add(item.type)
-            outgoing_packet.add(Decimal(item.req_might))
-            outgoing_packet.add(Decimal(item.req_cunning))
-            outgoing_packet.add(Decimal(item.req_psyche))
-            outgoing_packet.add(Decimal(item.req_lore))
-            outgoing_packet.add(Decimal(item.might))
-            outgoing_packet.add(Decimal(item.cunning))
-            outgoing_packet.add(Decimal(item.psyche))
-            outgoing_packet.add(Decimal(item.lore))
-            print("itemlore", item.lore)
 
             return outgoing_packet
 

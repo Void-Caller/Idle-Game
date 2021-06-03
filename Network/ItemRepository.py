@@ -1,18 +1,22 @@
 from .AbstractRepository import AbstractRepository
 
+
 class Item:
     def __init__(self):
-        self.id             = None
-        self.name           = None
-        self.type           = None
-        self.req_might      = None
-        self.req_cunning    = None
-        self.req_psyche     = None
-        self.req_lore       = None
-        self.might          = None
-        self.cunning        = None
-        self.psyche         = None
-        self.lore           = None
+        self.id = None
+        self.name = None
+        self.type = None
+        self.req_might = None
+        self.req_cunning = None
+        self.req_psyche = None
+        self.req_lore = None
+        self.might = None
+        self.cunning = None
+        self.psyche = None
+        self.lore = None
+        self.value = None
+        self.equipped = None
+
 
 class ItemRepository(AbstractRepository):
 
@@ -24,28 +28,32 @@ class ItemRepository(AbstractRepository):
 
         for result in results:
             item = Item()
-            item.id             = result[0]
-            item.name           = result[1]
-            item.type           = result[2]
-            item.req_might      = result[3]
-            item.req_cunning    = result[4]
-            item.req_psyche     = result[5]
-            item.req_lore       = result[6]
-            item.might          = result[7]
-            item.cunning        = result[8]
-            item.psyche         = result[9]
-            item.lore           = result[10]
+            item.id = result[0]
+            item.user_id = result[1]
+            item.name = result[2]
+            item.type = result[3]
+            item.req_might = result[4]
+            item.req_cunning = result[5]
+            item.req_psyche = result[6]
+            item.req_lore = result[7]
+            item.might = result[8]
+            item.cunning = result[9]
+            item.psyche = result[10]
+            item.lore = result[11]
+            item.value = result[12]
+            item.equipped = result[13]
 
             items.append(item)
 
         return items
-        
+
     def __init__(self, reset=False):
         self.name = "item"
         self.delete_querry = """DROP TABLE IF EXISTS `{}`;""".format(self.name)
         self.create_querry = """
         CREATE TABLE `{}` (
             `id` INTEGER PRIMARY KEY AUTOINCREMENT,
+            `user_id`               INTEGER NOT NULL,
             `name`                  VARCHAR NOT NULL,
             `type`                  VARCHAR NOT NULL,
             `req_might`             VARCHAR NOT NULL,
@@ -55,7 +63,10 @@ class ItemRepository(AbstractRepository):
             `might`                 VARCHAR NOT NULL,
             `cunning`               VARCHAR NOT NULL,
             `psyche`                VARCHAR NOT NULL,
-            `lore`                  VARCHAR NOT NULL
+            `lore`                  VARCHAR NOT NULL,
+            `value`                 VARCHAR NOT NULL,
+            `equipped`              INT NOT NULL,
+            FOREIGN KEY(`user_id`)  REFERENCES user(`id`)
         );
         """.format(self.name)
         super().__init__(reset)
@@ -80,42 +91,43 @@ class ItemRepository(AbstractRepository):
         else:
             raise TypeError
 
+
 if __name__ == "__main__":
 
-    itemRepository = ItemRepository()
+    itemRepository = ItemRepository(True)
 
     item = Item()
-    item.name           = "Dziadek do orzechow"
-    item.type           = "Weapon"
-    item.req_might      = 1
-    item.req_cunning    = 2
-    item.req_psyche     = 1
-    item.req_lore       = 1
-    item.might          = 1
-    item.cunning        = 2
-    item.psyche         = 1
-    item.lore           = 1
-    #itemRepository.add(item)
-    
+    item.name = "Dziadek do orzechow"
+    item.type = "Weapon"
+    item.req_might = 1
+    item.req_cunning = 2
+    item.req_psyche = 1
+    item.req_lore = 1
+    item.might = 1
+    item.cunning = 2
+    item.psyche = 1
+    item.lore = 1
+    # itemRepository.add(item)
+
     item = Item()
-    item.name           = "Durszlak Spaczenia"
-    item.type           = "Helmet"
-    item.req_might      = 11
-    item.req_cunning    = 112
-    item.req_psyche     = 23
-    item.req_lore       = 4
-    item.might          = 5
-    item.cunning        = 13
-    item.psyche         = 8
-    item.lore           = 0
-    #itemRepository.add(item)
+    item.name = "Durszlak Spaczenia"
+    item.type = "Helmet"
+    item.req_might = 11
+    item.req_cunning = 112
+    item.req_psyche = 23
+    item.req_lore = 4
+    item.might = 5
+    item.cunning = 13
+    item.psyche = 8
+    item.lore = 0
+    # itemRepository.add(item)
 
     for item in itemRepository.findAll():
-        print (item.id, item.name, item.type,
-               item.req_might, item.req_cunning, item.req_psyche, item.req_lore,
-               item.might, item.cunning, item.psyche, item.lore)
+        print(item.id, item.name, item.type,
+              item.req_might, item.req_cunning, item.req_psyche, item.req_lore,
+              item.might, item.cunning, item.psyche, item.lore)
 
-    item = itemRepository.findOneBy({"id" : 1})
-    print (item.id, item.name, item.type,
-            item.req_might, item.req_cunning, item.req_psyche, item.req_lore,
-            item.might, item.cunning, item.psyche, item.lore)
+    item = itemRepository.findOneBy({"id": 1})
+    print(item.id, item.name, item.type,
+          item.req_might, item.req_cunning, item.req_psyche, item.req_lore,
+          item.might, item.cunning, item.psyche, item.lore)

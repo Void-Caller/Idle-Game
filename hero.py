@@ -35,8 +35,6 @@ class Hero:
         self.passive = [PassiveAttribute(20, 'Stamina'), PassiveAttribute(20, 'Health'), PassiveAttribute(20, 'Ploy'),
                         PassiveAttribute(20, 'Spirit'), PassiveAttribute(20, 'Clarity')]
 
-        self.passive_max = [PassiveAttribute(100, 'Stamina'), PassiveAttribute(100, 'Health'), PassiveAttribute(100, 'Ploy'),
-                            PassiveAttribute(100, 'Spirit'), PassiveAttribute(100, 'Clarity')]
         # umiejetnosci
         self.skills = None  # jakies inne umiejetnosci, jeszcze nie utworzony typ.
         # ekwipunek
@@ -176,6 +174,7 @@ class Hero:
 
         return success, cost, self.getNextUpgradeCost(attribute_id, False), value
 
+
 class Item:
     def __init__(self, name, type, minimum=[0, 0, 0, 0], m=0, c=0, p=0, l=0, value=0):
         self.name = name
@@ -229,7 +228,7 @@ class Equipment:
             elif i.type == 'Ring':
                 self.rings.append(i)
             else:
-                raise Exception('Not supported type of item')
+                raise Exception('Not supported type of item' + i.type)
             self.all_items.append(i)
 
     # Oblicza ilosc wolnego miejsca w ekwipunku

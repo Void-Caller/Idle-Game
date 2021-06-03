@@ -27,7 +27,6 @@ class Application(tk.Tk):
         """
         tk.Tk.__init__(self, *args, **kwargs)
         self.hero = hero.Hero('Qwe')
-
         self.main_font = tkfont.Font(
             family='Helvetica', size=18, weight="bold")
 
@@ -93,8 +92,9 @@ class MenuView(tk.Frame):
         # newGame_btn = tk.Button(self, text="New Game", font=controller.main_font,
         #                        command=lambda: controller.show_frame("GameView"))
 
-        debug_btn = tk.Button(self, text="Debug Start", font=controller.main_font,
-                              command=lambda: switch_to_game(self, controller))
+        # debug_btn = tk.Button(self, text="Debug Start", font=controller.main_font,
+        #                       command=lambda: switch_to_game(self, controller))
+        # debug_btn.grid(row=2, column=2, sticky='nesw')
         login_btn = tk.Button(self, text="Login", font=controller.main_font,
                               command=lambda: controller.show_frame("LoginView"))
         register_btn = tk.Button(self, text="Register", font=controller.main_font,
@@ -102,8 +102,6 @@ class MenuView(tk.Frame):
         exitGame_btn = tk.Button(self, text="Exit", font=controller.main_font,
                                  command=lambda: exit())
 
-        # some_lb.grid(row=2, column=2, sticky='nesw')
-        debug_btn.grid(row=2, column=2, sticky='nesw')
         login_btn.grid(row=4, column=2, sticky='ew')
         register_btn.grid(row=5, column=2, sticky='ew')
         exitGame_btn.grid(row=6, column=2, sticky='ew')
@@ -135,14 +133,6 @@ class GameView(tk.Frame):
         self.__init_buttons()
         self.__init_adventures()
         self.__init_challenges()
-
-        # init upgrades cost
-        for i in range(4):
-            self.train(i)
-
-        for i in range(5):
-            self.train(i, False)
-        self.messages.clear()
 
         # Status
         self.status_label = tk.Label(self, text="Idle",
@@ -368,7 +358,7 @@ class GameView(tk.Frame):
         self.adventures_btns.append(self.adv_2_btn)
         self.adventures_btns.append(self.adv_3_btn)
 
-        self.adventure_entry = tk.Entry(self, text='Username', font=self.game_font, width=5)
+        self.adventure_entry = tk.Entry(self, text='1', font=self.game_font, width=5)
         self.adventure_entry.grid(row=12, column=3, sticky='ew')
 
         self.adventure_generate_btn = tk.Button(self, text="Generate",
@@ -428,11 +418,13 @@ class GameView(tk.Frame):
         bohater = self.controller.hero
         if active:
             succ, cost, next_cost, value = bohater.train(index)
-            self.upgrade_active_btns[index].config(text="Train {}\n({} exp)".format(hero.active_names[index], next_cost))
+            self.upgrade_active_btns[index].config(
+                text="Train {}\n({} exp)".format(hero.active_names[index], next_cost))
             # self.costs_labels[index].config(text="({})".format(next_cost))
         else:
             succ, cost, next_cost, value = bohater.train(index, False)
-            self.upgrade_passive_btns[index].config(text="Train {}\n({} all exp)".format(hero.passive_names[index], next_cost))
+            self.upgrade_passive_btns[index].config(
+                text="Train {}\n({} all exp)".format(hero.passive_names[index], next_cost))
             # self.costs_labels[index].config(text="({})".format(next_cost))
 
         if succ:
@@ -504,6 +496,8 @@ class GameView(tk.Frame):
 
     def adv_start(self, type, id):
 
+        print(self.controller.hero)
+        print(action.Work.level)
         # Hide Adventures
         self.adventure_entry.grid_remove()
         self.adventure_label.grid_remove()
@@ -623,11 +617,13 @@ class GameView(tk.Frame):
             self.messages.add_message("You need {} gold\nto upgrade {}.".format(cost, action_name))
 
     def start(self):
-        # self.stamina_prbar['maximum'] = self.controller.hero.passive[0].max
-        # self.health_prbar['maximum'] = self.controller.hero.passive[1].max
-        # self.ploy_prbar['maximum'] = self.controller.hero.passive[2].max
-        # self.spirit_prbar['maximum'] = self.controller.hero.passive[3].max
-        # self.clarity_prbar['maximum'] = self.controller.hero.passive[4].max
+        # init upgrades cost
+        for i in range(4):
+            self.train(i)
+
+        for i in range(5):
+            self.train(i, False)
+        self.messages.clear()
 
         self.generate_adventures(1)
 
@@ -943,14 +939,65 @@ class EquipmentView(tk.Frame):
         self.update_informations()
 
 
+def load_stats(bohater):
+    cl = Client().get_instance()
+    stats = cl.get_stats()
+    bohater.riches.val = stats['gold']
+    bohater.treasures.val = stats['treasure']
+    bohater.active[0].val = stats['might']
+    bohater.active[1].val = stats['cunning']
+    bohater.active[2].val = stats['psyche']
+    bohater.active[3].val = stats['lore']
+    bohater.active_exp[0].val = stats['might_exp']
+    bohater.active_exp[1].val = stats['cunning_exp']
+    bohater.active_exp[2].val = stats['psyche_exp']
+    bohater.active_exp[3].val = stats['lore_exp']
+    bohater.passive[0].val = stats['stamina']
+    bohater.passive[1].val = stats['health']
+    bohater.passive[2].val = stats['ploy']
+    bohater.passive[3].val = stats['spirit']
+    bohater.passive[4].val = stats['clarity']
+    bohater.passive[0].max = stats['stamina_max']
+    bohater.passive[1].max = stats['health_max']
+    bohater.passive[2].max = stats['ploy_max']
+    bohater.passive[3].max = stats['spirit_max']
+    bohater.passive[4].max = stats['clarity_max']
+    action.set_work_level(stats['work_level'])
+    action.set_rest_level(stats['rest_level'])
+
+
+def load_items(bohater):
+    cl = Client().get_instance()
+    print(cl.get_items())
+    for item in cl.get_items():
+        new_item = hero.Item(item['name'], item['type'],
+                             minimum=[
+                                 item['req_might'],
+                                 item['req_cunning'],
+                                 item['req_psyche'],
+                                 item['req_lore']
+                             ],
+                             m=item['might'],
+                             c=item['cunning'],
+                             p=item['psyche'],
+                             l=item['lore'],
+                             value=item['value'])
+
+        if item['equipped']:
+            bohater.setActiveItem(new_item)
+        else:
+            bohater.eq.addItem(new_item)
+
+
 def login(view, controller, username, password):
     cl = Client().get_instance()
     return_value = cl.login(username, password)
     error_lb = tk.Label(
         view, text='Invalid username or password', font=controller.main_font)
-    print(return_value)
     if return_value:
-        switch_to_game(view, controller)
+        load_stats(controller.hero)
+        load_items(controller.hero)
+        switch_to(view, controller, "GameView")
         error_lb.grid(row=0, column=2, sticky='ew')
     else:
         error_lb.grid(row=7, column=2, sticky='ew')
@@ -976,13 +1023,20 @@ def register(view, controller, username, password, email):
 
 def logout(view, controller):
     cl = Client().get_instance()
-    # TODO save variables to db
     cl.logout()
+    save_data(controller.hero)
+    switch_to(view, controller, "MenuView")
 
 
-def switch_to_game(view, controller):
+def save_data(bohater):
+    cl = Client().get_instance()
+    cl.save_stats()
+    cl.save_items()
+
+
+def switch_to(view, controller, where):
     view.reset()
-    controller.show_frame("GameView")
+    controller.show_frame(where)
 
 
 def large_number_format(number):
