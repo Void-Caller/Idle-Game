@@ -1,33 +1,42 @@
 from data_types import Currency, PassiveAttribute
 from decimal import Decimal
 
+active_names = ["Might", "Cunning", "Psyche", "Lore"]
+passive_names = ["Stamina", "Health", "Ploy", "Spirit", "Clarity"]
 
 class Hero:
     def __init__(self, name):
         # nazwa
         self.name = name
         # waluty
-        self.currency_might = Currency(0, 'might_exp')
-        self.currency_cunning = Currency(0, 'cunning_exp')
-        self.currency_psyche = Currency(0, 'psyche_exp')
-        self.currency_lore = Currency(0, 'lore_exp')
+        # self.currency_might = Currency(0, 'might_exp')
+        # self.currency_cunning = Currency(0, 'cunning_exp')
+        # self.currency_psyche = Currency(0, 'psyche_exp')
+        # self.currency_lore = Currency(0, 'lore_exp')
+        self.active_exp = [Currency(0, 'might_exp'), Currency(0, 'cunning_exp'),
+                           Currency(0, 'psyche_exp'), Currency(0, 'lore_exp')]
         self.treasures = Currency(0, 'treasure')
         self.riches = Currency(0, 'gold')
         # atrybuty czynne
-        #wszystkie odwołania do atrybutów mają iść przez tablicę
-        #0-Might
-        #1-Cunning
-        #2-Psyche
-        #3-Lore
+        # wszystkie odwołania do atrybutów mają iść przez tablicę
+        # 0-Might
+        # 1-Cunning
+        # 2-Psyche
+        # 3-Lore
+        self.train_active = [Currency(1, 'Might'), Currency(1, 'Cunning'), Currency(1, 'Psyche'), Currency(1, 'Lore')]
         self.active = [Currency(1, 'Might'), Currency(1, 'Cunning'), Currency(1, 'Psyche'), Currency(1, 'Lore')]
         # atrybuty pasywne
-        #wszystkie odwołania do atrybutów mają iść przez tablicę
-        #0-Stamina
-        #1-Health
-        #2-Ploy
-        #3-Spirit
-        #4-Clarity
-        self.passive = [PassiveAttribute(20, 'Stamina'), PassiveAttribute(20, 'Health'), PassiveAttribute(20, 'Ploy'), PassiveAttribute(20, 'Spirit'), PassiveAttribute(20, 'Clarity')]
+        # wszystkie odwołania do atrybutów mają iść przez tablicę
+        # 0-Stamina
+        # 1-Health
+        # 2-Ploy
+        # 3-Spirit
+        # 4-Clarity
+        self.passive = [PassiveAttribute(20, 'Stamina'), PassiveAttribute(20, 'Health'), PassiveAttribute(20, 'Ploy'),
+                        PassiveAttribute(20, 'Spirit'), PassiveAttribute(20, 'Clarity')]
+
+        self.passive_max = [PassiveAttribute(100, 'Stamina'), PassiveAttribute(100, 'Health'), PassiveAttribute(100, 'Ploy'),
+                            PassiveAttribute(100, 'Spirit'), PassiveAttribute(100, 'Clarity')]
         # umiejetnosci
         self.skills = None  # jakies inne umiejetnosci, jeszcze nie utworzony typ.
         # ekwipunek
@@ -63,11 +72,11 @@ class Hero:
                 self.weapon = it
                 self.set[0] = it
             else:
-                #usuwamy bonusy poprzedniego przedmiotu
+                # usuwamy bonusy poprzedniego przedmiotu
                 for i in range(4):
                     self.active[i] -= self.set[0].item_attr[i]
 
-                #dopiero zamieniamy na nowy
+                # dopiero zamieniamy na nowy
                 self.weapon = it
                 self.set[0] = it
         elif it.type == 'Helmet':
@@ -75,11 +84,11 @@ class Hero:
                 self.helmet = it
                 self.set[1] = it
             else:
-                #usuwamy bonusy poprzedniego przedmiotu
+                # usuwamy bonusy poprzedniego przedmiotu
                 for i in range(4):
                     self.active[i] -= self.set[1].item_attr[i]
 
-                #dopiero zamieniamy na nowy
+                # dopiero zamieniamy na nowy
                 self.helmet = it
                 self.set[1] = it
         elif it.type == 'Armor':
@@ -87,10 +96,10 @@ class Hero:
                 self.armor = it
                 self.set[2] = it
             else:
-                #usuwamy bonusy poprzedniego przedmiotu
+                # usuwamy bonusy poprzedniego przedmiotu
                 for i in range(4):
                     self.active[i] -= self.set[2].item_attr[i]
-                #dopiero zamieniamy na nowy
+                # dopiero zamieniamy na nowy
                 self.armor = it
                 self.set[2] = it
         elif it.type == 'Ring':
@@ -98,10 +107,10 @@ class Hero:
                 self.ring = it
                 self.set[3] = it
             else:
-                #usuwamy bonusy poprzedniego przedmiotu
+                # usuwamy bonusy poprzedniego przedmiotu
                 for i in range(4):
                     self.active[i] -= self.set[3].item_attr[i]
-                #dopiero zamieniamy na nowy
+                # dopiero zamieniamy na nowy
                 self.ring = it
                 self.set[3] = it
         else:
@@ -112,27 +121,77 @@ class Hero:
         for i in range(4):
             print(self.active[i])
 
-
     def printHeroPassive(self):
         for i in range(5):
             print(self.passive[i])
 
+    def get_attr(self):
+        return [self.active[0].val, self.active[1].val, self.active[2].val, self.active[3].val]
+
+    def equip(self, item_id):
+        try:
+            self.setActiveItem(self.eq.all_items[item_id])
+            del self.eq.all_items[item_id]
+        except Exception:
+            pass
+
+    def sell(self, item_id):
+        item = self.eq.all_items[item_id]
+        name = item.name
+        value = item.value
+
+        self.riches.val += self.eq.all_items[item_id].value
+        del self.eq.all_items[item_id]
+        return [name, value]
+
+    def getNextUpgradeCost(self, attribute_id, active=True):
+        cost = Decimal(100)  # todo
+        return cost
+
+    def train(self, attribute_id, active=True):
+        value = None
+        success = False
+        cost = None
+
+        if active:
+            value = Decimal(0.5)
+            cost = self.getNextUpgradeCost(attribute_id)
+            if cost < self.active_exp[attribute_id]:
+                self.train_active[attribute_id] += 1
+                self.active_exp[attribute_id].val -= cost
+
+                self.active[attribute_id].val += value
+                success = True
+        else:
+            value = Decimal(20)
+            cost = Decimal(100)
+
+            if [cost < self.active_exp[i] for i in range(4)] == [True for i in range(4)]:
+                for i in range(4):
+                    self.active_exp[i].val -= cost
+
+                self.passive_max[attribute_id].val += value
+                success = True
+                value = self.passive_max[attribute_id].val
+
+        return success, cost, self.getNextUpgradeCost(attribute_id, False), value
 
 class Item:
-    def __init__(self, name, type, minimum=[0, 0, 0, 0], m=0, c=0, p=0, l=0):
+    def __init__(self, name, type, minimum=[0, 0, 0, 0], m=0, c=0, p=0, l=0, value=0):
         self.name = name
         self.type = type
+        self.value = value
 
         # tablica minimalnych atrybutów aktywnych ktore musi miec bohater aby zalozyc przedmiot
         self.min_attr = []
         for i in range(len(minimum)):
             self.min_attr.append(Decimal(minimum[i]))
 
-        self.item_might = Currency(m,"Might")
-        self.item_cunning = Currency(c,"Cunning")
-        self.item_psyche = Currency(p,"Psyche")
-        self.item_lore = Currency(l,'Lore')
-        #wszystkie odwołania do atrybutów mają iść przez tablicę
+        self.item_might = Currency(m, "Might")
+        self.item_cunning = Currency(c, "Cunning")
+        self.item_psyche = Currency(p, "Psyche")
+        self.item_lore = Currency(l, 'Lore')
+        # wszystkie odwołania do atrybutów mają iść przez tablicę
         self.item_attr = [self.item_might, self.item_cunning, self.item_psyche, self.item_lore]
 
     # Ustawienie minimalnych atrybutow potrzebnych do zalozenia przedmiotu
