@@ -1008,7 +1008,8 @@ def register(view, controller, username, password, email):
     return_value = cl.register(username, password, email)
     error_lb = tk.Label(view, text='Tmp', font=controller.main_font)
     if return_value == 1:
-        switch_to_game(view, controller)
+        controller.hero = hero.Hero("Name")
+        switch_to(view, controller, "GameView")
         error_lb.grid(row=0, column=2, sticky='ew')
         return
     elif return_value == 2:
