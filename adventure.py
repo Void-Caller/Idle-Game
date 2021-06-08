@@ -46,7 +46,7 @@ class ItemContainer:
             type_ind = random.randint(0, 3)
             name = random.choice(itemPrefixes) + ' ' + random.choice(itemNames[type_ind])
             # losowanie typu przedmiotu
-            type = random.choice(itemTypes)
+            type = itemTypes[type_ind]
 
             # klasa przedmiotu 75% zwykły, 15% rzadki, 9% mistrzowski, 1% legendarny
             rarity = 0
