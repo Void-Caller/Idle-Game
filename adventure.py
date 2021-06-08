@@ -101,8 +101,12 @@ class Reward:
         return self.items.items
 
 
-challenge_names = ["Wyzwanie1", "Walka z niedzwiedziem", "Przeplyniecie rzeki"]
-adventure_names = ["Przygoda1", "Wyprawa w gory"]
+challenge_names = ["Bandits", "Wild beast", "Crossing the treacherous river", "Cultists' trap",
+                   "Ancient Riddle", "Hostile nomads", "Barbarian chief", "Cursed Tablet",
+                   "Dangerous corridor", "Dark labyrinth", "Poisonous snakes", "Dark monolith"]
+adventure_names = ["Temple of Doom", "Temple of the Black Pharaoh", "Stygian Depths", "Forsaken City",
+                   "Ancient Tomb", "Atlantean Ruins", "Uncharted Wilderness", "Untamed Jungle",
+                   "Deepest Forest", "Barbarian Citadel"]
 
 
 class CampException(Exception):
